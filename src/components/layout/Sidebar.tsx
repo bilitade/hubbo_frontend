@@ -22,17 +22,17 @@ interface SidebarProps {
 }
 
 const navigation = [
-  { name: 'Workflow', href: '/', icon: Home },
-  { name: 'Ideas', href: '/ideas', icon: Lightbulb },
-  { name: 'Projects', href: '/projects', icon: FolderKanban },
-  { name: 'Tasks', href: '/tasks', icon: CheckSquare },
-  { name: 'Experiments', href: '/experiments', icon: FlaskConical },
-  { name: 'Users', href: '/users', icon: Users },
-  { name: 'My Profile', href: '/profiles', icon: UserCircle },
-  { name: 'Roles', href: '/roles', icon: Shield },
-  { name: 'Permissions', href: '/permissions', icon: Key },
-  { name: 'AI Assistant', href: '/ai', icon: Bot },
-  { name: 'Files', href: '/files', icon: FileText },
+  { name: 'Workflow', href: '/dashboard', icon: Home },
+  { name: 'Ideas', href: '/dashboard/ideas', icon: Lightbulb },
+  { name: 'Projects', href: '/dashboard/projects', icon: FolderKanban },
+  { name: 'Tasks', href: '/dashboard/tasks', icon: CheckSquare },
+  { name: 'Experiments', href: '/dashboard/experiments', icon: FlaskConical },
+  { name: 'Users', href: '/dashboard/users', icon: Users },
+  { name: 'My Profile', href: '/dashboard/profiles', icon: UserCircle },
+  { name: 'Roles', href: '/dashboard/roles', icon: Shield },
+  { name: 'Permissions', href: '/dashboard/permissions', icon: Key },
+  { name: 'AI Assistant', href: '/dashboard/ai', icon: Bot },
+  { name: 'Files', href: '/dashboard/files', icon: FileText },
 ];
 
 export function Sidebar({ open = true, onClose }: SidebarProps) {

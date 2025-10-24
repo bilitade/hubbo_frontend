@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
@@ -492,16 +492,18 @@ export function AddProjectModal({ open, onOpenChange, onSuccess, onProjectCreate
           </div>
         </div>
 
-        <div className="px-6 pb-6">
-          <DialogFooter>
-            <Button variant="outline" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreate}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Project {generateTasksAfter && '& Generate Tasks'}
-            </Button>
-          </DialogFooter>
+        <div className="px-6 pb-6 border-t pt-4 space-y-3">
+          {/* Primary Action */}
+          <Button onClick={handleCreate} className="w-full" size="lg">
+            <Plus className="h-4 w-4 mr-2" />
+            {generateTasksAfter ? 'Create Project & Generate Tasks' : 'Create Project'}
+          </Button>
+          
+          {/* Cancel */}
+          <Button variant="ghost" onClick={handleClose} className="w-full">
+            <X className="h-4 w-4 mr-2" />
+            Cancel
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

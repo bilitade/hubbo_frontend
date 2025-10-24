@@ -312,50 +312,60 @@ export function EditProjectModal({ project, open, onOpenChange, onSuccess, onDel
           </div>
         </div>
 
-        <div className="px-6 pb-6 border-t pt-4">
+        <div className="px-6 pb-6 border-t pt-4 space-y-3">
           {isEditMode ? (
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsEditMode(false)}>
-                <X className="h-4 w-4 mr-2" />
-                Cancel
-              </Button>
-              <Button onClick={handleSaveEdit}>
+            <>
+              {/* Save Changes */}
+              <Button onClick={handleSaveEdit} className="w-full" size="lg">
                 <Save className="h-4 w-4 mr-2" />
                 Save Changes
               </Button>
-            </div>
+              
+              {/* Cancel */}
+              <Button variant="outline" onClick={() => setIsEditMode(false)} className="w-full">
+                <X className="h-4 w-4 mr-2" />
+                Cancel Edit
+              </Button>
+            </>
           ) : (
-            <div className="flex flex-col gap-3">
+            <>
+              {/* Generate Tasks Action */}
               {onGenerateTasks && (
                 <Button 
                   variant="default"
                   onClick={handleGenerateTasks} 
                   className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                  size="lg"
                 >
                   <CheckSquare className="h-4 w-4 mr-2" />
                   Generate Tasks with AI
                 </Button>
               )}
               
-              <div className="flex gap-2">
-                <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)} className="flex-1">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Project
-                </Button>
-                <Button variant="outline" onClick={handleArchive} className="flex-1">
+              {/* Edit Action */}
+              <Button onClick={handleEditClick} className="w-full" size="lg">
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Project
+              </Button>
+              
+              {/* Secondary Actions */}
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" onClick={handleArchive}>
                   <Archive className="h-4 w-4 mr-2" />
                   Archive
                 </Button>
-                <Button onClick={handleEditClick} className="flex-1">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
+                <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
                 </Button>
               </div>
-              <Button variant="outline" onClick={handleClose} className="w-full">
+              
+              {/* Close */}
+              <Button variant="ghost" onClick={handleClose} className="w-full">
                 <X className="h-4 w-4 mr-2" />
                 Close
               </Button>
-            </div>
+            </>
           )}
         </div>
       </DialogContent>

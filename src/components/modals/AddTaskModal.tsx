@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
@@ -443,18 +443,34 @@ export function AddTaskModal({ open, onOpenChange, onSuccess, projectId, project
           )}
         </div>
 
-        <div className="px-6 pb-6 border-t pt-4">
-          <DialogFooter>
-            <Button variant="outline" onClick={handleClose}>
-              Cancel
-            </Button>
-            {tasks.length > 0 && (
-              <Button onClick={handleCreateTasks} disabled={selectedTasks.size === 0}>
+        <div className="px-6 pb-6 border-t pt-4 space-y-3">
+          {tasks.length > 0 && (
+            <>
+              {/* Primary Action */}
+              <Button 
+                onClick={handleCreateTasks} 
+                disabled={selectedTasks.size === 0} 
+                className="w-full"
+                size="lg"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Create {selectedTasks.size} Task{selectedTasks.size !== 1 ? 's' : ''}
               </Button>
-            )}
-          </DialogFooter>
+              
+              {/* Cancel */}
+              <Button variant="ghost" onClick={handleClose} className="w-full">
+                <X className="h-4 w-4 mr-2" />
+                Cancel
+              </Button>
+            </>
+          )}
+          
+          {tasks.length === 0 && (
+            <Button variant="ghost" onClick={handleClose} className="w-full">
+              <X className="h-4 w-4 mr-2" />
+              Close
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

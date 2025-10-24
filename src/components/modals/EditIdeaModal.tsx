@@ -234,39 +234,43 @@ export function EditIdeaModal({ idea, open, onOpenChange, onSuccess, onMoveToPro
           </div>
         </div>
 
-        <div className="px-6 pb-6 border-t pt-4">
-          <div className="flex flex-col gap-3">
-            <div className="flex gap-2">
-              <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)} className="flex-1">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Idea
-              </Button>
-              <Button variant="outline" onClick={handleArchive} className="flex-1">
-                <Archive className="h-4 w-4 mr-2" />
-                Archive
-              </Button>
-              <Button onClick={handleUpdate} className="flex-1">
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
-              </Button>
-            </div>
-            
-            {onMoveToProject && (
-              <Button 
-                variant="default" 
-                onClick={handleMoveToProject} 
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              >
-                <FolderSymlink className="h-4 w-4 mr-2" />
-                Move to Project
-              </Button>
-            )}
-            
-            <Button variant="outline" onClick={handleClose} className="w-full">
-              <X className="h-4 w-4 mr-2" />
-              Close
+        <div className="px-6 pb-6 border-t pt-4 space-y-3">
+          {/* Primary Action */}
+          <Button onClick={handleUpdate} className="w-full" size="lg">
+            <Save className="h-4 w-4 mr-2" />
+            Save Changes
+          </Button>
+          
+          {/* Move to Project Action */}
+          {onMoveToProject && (
+            <Button 
+              variant="default" 
+              onClick={handleMoveToProject} 
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              size="lg"
+            >
+              <FolderSymlink className="h-4 w-4 mr-2" />
+              Move to Project
+            </Button>
+          )}
+          
+          {/* Secondary Actions */}
+          <div className="grid grid-cols-2 gap-2">
+            <Button variant="outline" onClick={handleArchive}>
+              <Archive className="h-4 w-4 mr-2" />
+              Archive
+            </Button>
+            <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
             </Button>
           </div>
+          
+          {/* Close */}
+          <Button variant="ghost" onClick={handleClose} className="w-full">
+            <X className="h-4 w-4 mr-2" />
+            Close
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

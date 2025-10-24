@@ -15,7 +15,7 @@ export function Header({ onMenuClick }: HeaderProps) {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate('/');
   };
 
   const toggleTheme = () => {
@@ -32,7 +32,7 @@ export function Header({ onMenuClick }: HeaderProps) {
         </div>
         
         <div className="mr-4 flex">
-          <a href="/" className="mr-6 flex items-center space-x-2 group">
+          <a href="/dashboard" className="mr-6 flex items-center space-x-2 group">
             <div className="bg-primary p-1.5 rounded-lg group-hover:scale-110 transition-transform">
               <Rocket className="h-5 w-5 text-primary-foreground" />
             </div>
