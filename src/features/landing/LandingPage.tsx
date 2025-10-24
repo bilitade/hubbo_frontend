@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Brain, CheckCircle, Droplets, GitBranch, Lightbulb, Target, TrendingUp, Users, Zap } from 'lucide-react';
+import { ArrowRight, Brain, CheckCircle, Droplets, GitBranch, Lightbulb, Target, TrendingUp, Users, Zap, Building2, Shield, Clock, BarChart3 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 
 export function LandingPage() {
@@ -11,13 +11,16 @@ export function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
                 <Droplets className="w-6 h-6 text-white" />
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Hubbo
-              </span>
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Hubbo
+                </span>
+                <span className="text-xs text-gray-500 -mt-1 font-medium">From Source to Success</span>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <Button variant="outline" onClick={() => navigate('/login')}>
@@ -38,20 +41,20 @@ export function LandingPage() {
             <div className="space-y-8">
               <div className="inline-block">
                 <div className="inline-flex items-center space-x-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium">
-                  <Zap className="w-4 h-4" />
-                  <span>AI-Powered Task Management</span>
+                  <Brain className="w-4 h-4" />
+                  <span>AI Foundry Team Management Platform</span>
                 </div>
               </div>
               <h1 className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight">
-                From Source to Success with{' '}
                 <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   Hubbo
                 </span>
+                {' '}— From Source to Success
               </h1>
               <p className="text-xl text-gray-600 leading-relaxed">
-                Like a jar collecting water from its source, Hubbo gathers your ideas, 
-                organizes your tasks, and flows seamlessly toward success. Experience 
-                intelligent task management powered by AI.
+                Like a jar collecting water from its source, <strong>Hubbo</strong> gathers your AI projects, 
+                organizes foundry team workflows, and flows seamlessly toward breakthrough innovation. 
+                Intelligent task management built for the AI Foundry Team at <strong>Cooperative Bank of Oromia</strong>.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button 
@@ -74,15 +77,15 @@ export function LandingPage() {
               <div className="flex items-center space-x-8 pt-4">
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="text-sm text-gray-600">Free to start</span>
+                  <span className="text-sm text-gray-600">Bank-grade security</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="text-sm text-gray-600">No credit card</span>
+                  <span className="text-sm text-gray-600">AI Foundry focused</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="text-sm text-gray-600">AI-enhanced</span>
+                  <span className="text-sm text-gray-600">CBO exclusive</span>
                 </div>
               </div>
             </div>
@@ -98,8 +101,8 @@ export function LandingPage() {
                         <Lightbulb className="w-5 h-5 text-blue-600" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900">Capture Ideas</h3>
-                        <p className="text-sm text-gray-500">From the source</p>
+                        <h3 className="font-semibold text-gray-900">AI Projects</h3>
+                        <p className="text-sm text-gray-500">From idea to deployment</p>
                       </div>
                     </div>
                   </div>
@@ -109,19 +112,19 @@ export function LandingPage() {
                         <Brain className="w-5 h-5 text-purple-600" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900">AI Enhancement</h3>
-                        <p className="text-sm text-gray-500">Intelligent processing</p>
+                        <h3 className="font-semibold text-gray-900">Foundry Workflows</h3>
+                        <p className="text-sm text-gray-500">Streamlined collaboration</p>
                       </div>
                     </div>
                   </div>
                   <div className="bg-white rounded-xl shadow-xl p-6 transform hover:scale-105 transition-transform duration-300 animate-float">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                        <Target className="w-5 h-5 text-green-600" />
+                        <TrendingUp className="w-5 h-5 text-green-600" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900">Achieve Success</h3>
-                        <p className="text-sm text-gray-500">Reach your goals</p>
+                        <h3 className="font-semibold text-gray-900">Innovation Success</h3>
+                        <p className="text-sm text-gray-500">Measurable impact</p>
                       </div>
                     </div>
                   </div>
@@ -137,47 +140,47 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Everything Flows Naturally
+              AI Foundry Task Management, Simplified
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Like water flowing from source to destination, Hubbo makes your workflow seamless
+              Like water flowing from source to destination, Hubbo makes your AI Foundry workflows seamless and efficient
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <FeatureCard
               icon={<Brain className="w-6 h-6" />}
               title="AI-Powered Intelligence"
-              description="Let AI enhance your ideas, generate projects, and optimize your task management automatically."
+              description="Let AI enhance your foundry projects, automate routine tasks, and optimize AI development workflows."
               color="blue"
             />
             <FeatureCard
               icon={<Lightbulb className="w-6 h-6" />}
-              title="Idea Management"
-              description="Capture ideas at their source and watch them evolve into actionable projects with AI assistance."
+              title="Idea to Production Pipeline"
+              description="Capture and organize AI ideas, experiments, and models with intelligent assistance from ideation to deployment."
               color="yellow"
             />
             <FeatureCard
               icon={<GitBranch className="w-6 h-6" />}
-              title="Smart Projects"
-              description="Organize complex projects with ease. AI helps break down tasks and suggests optimal workflows."
+              title="Smart Project Organization"
+              description="Organize complex AI/ML projects with ease. AI helps break down tasks and suggests optimal development paths."
               color="purple"
             />
             <FeatureCard
               icon={<Target className="w-6 h-6" />}
-              title="Task Tracking"
-              description="Monitor progress, set priorities, and achieve goals with intelligent task management."
+              title="Task & Sprint Management"
+              description="Track AI Foundry team progress, manage sprints, set priorities, and achieve innovation goals intelligently."
               color="green"
             />
             <FeatureCard
               icon={<TrendingUp className="w-6 h-6" />}
-              title="Experiments & Testing"
-              description="Run A/B tests and experiments to optimize your processes and measure what works."
+              title="Experiment Tracking"
+              description="Monitor AI experiments, track model performance, and maintain a comprehensive history of your foundry work."
               color="orange"
             />
             <FeatureCard
               icon={<Users className="w-6 h-6" />}
-              title="Team Collaboration"
-              description="Work together seamlessly with role-based permissions and real-time collaboration."
+              title="Foundry Team Collaboration"
+              description="Enable seamless collaboration across AI team members with role-based access and secure knowledge sharing."
               color="indigo"
             />
           </div>
@@ -189,36 +192,36 @@ export function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              The Hubbo Journey
+              From Source to Success
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              From source to success, every drop counts
+              The Hubbo journey for AI Foundry teams — every innovation matters
             </p>
           </div>
           <div className="grid md:grid-cols-4 gap-8">
             <JourneyStep
               number="1"
-              title="Collect"
-              description="Gather ideas like water from the source"
-              icon={<Droplets className="w-8 h-8" />}
+              title="Source"
+              description="Capture AI ideas and requirements"
+              icon={<Lightbulb className="w-8 h-8" />}
             />
             <JourneyStep
               number="2"
               title="Enhance"
-              description="AI enriches and refines your concepts"
+              description="AI optimizes and structures workflows"
               icon={<Brain className="w-8 h-8" />}
             />
             <JourneyStep
               number="3"
-              title="Organize"
-              description="Structure projects and tasks efficiently"
-              icon={<GitBranch className="w-8 h-8" />}
+              title="Execute"
+              description="Manage sprints and deliverables"
+              icon={<Target className="w-8 h-8" />}
             />
             <JourneyStep
               number="4"
-              title="Succeed"
-              description="Achieve your goals and celebrate"
-              icon={<Target className="w-8 h-8" />}
+              title="Success"
+              description="Deploy and measure impact"
+              icon={<TrendingUp className="w-8 h-8" />}
             />
           </div>
         </div>
@@ -228,10 +231,10 @@ export function LandingPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-purple-600">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl font-bold text-white mb-6">
-            Ready to Fill Your Jar with Success?
+            Ready to Transform Your AI Foundry Workflow?
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            Join thousands flowing toward their goals with Hubbo's AI-powered task management
+            Join Cooperative Bank of Oromia's AI Foundry Team using Hubbo's intelligent task management platform
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
@@ -265,7 +268,7 @@ export function LandingPage() {
               <span className="text-xl font-bold text-white">Hubbo</span>
             </div>
             <p className="text-gray-400 text-sm">
-              © 2025 Hubbo. From source to success, every drop counts.
+              © 2025 Hubbo by Cooperative Bank of Oromia — AI Foundry Team. From source to success.
             </p>
           </div>
         </div>
