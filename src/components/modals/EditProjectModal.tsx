@@ -142,14 +142,12 @@ export function EditProjectModal({ project, open, onOpenChange, onSuccess, onDel
               <FolderKanban className="h-6 w-6 text-blue-500" />
               {isEditMode ? 'Edit Project' : project.title}
             </DialogTitle>
-            <DialogDescription>
-              {project.project_number && (
-                <Badge variant="outline" className="mt-2">
-                  {project.project_number}
-                </Badge>
-              )}
-            </DialogDescription>
           </DialogHeader>
+          {project.project_number && (
+            <Badge variant="outline" className="mt-2">
+              {project.project_number}
+            </Badge>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">

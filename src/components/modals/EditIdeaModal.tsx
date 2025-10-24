@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Lightbulb, X, Save, Trash2, Archive, FolderSymlink } from 'lucide-react';
+import { Lightbulb, X, Trash2, Archive, Rocket, Bot, Sparkles } from 'lucide-react';
 import { apiClient } from '../../services/api';
 import type { IdeaResponse, IdeaUpdate } from '../../types/api';
 
@@ -24,7 +24,20 @@ export function EditIdeaModal({ idea, open, onOpenChange, onSuccess, onMoveToPro
     category: '',
     status: 'inbox',
   });
+  const [departments, setDepartments] = useState<string[]>([]);
+  const [customDepartment, setCustomDepartment] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [aiEnhancing, setAiEnhancing] = useState(false);
+  const [aiSuggestingDepts, setAiSuggestingDepts] = useState(false);
+
+  const predefinedDepartments = [
+    'Marketing',
+    'Business Operations',
+    'Card Banking',
+    'Technology',
+    'Customer Service',
+    'Finance'
+  ];
 
   useEffect(() => {
     if (idea) {
@@ -35,6 +48,7 @@ export function EditIdeaModal({ idea, open, onOpenChange, onSuccess, onMoveToPro
         category: idea.category || '',
         status: idea.status,
       });
+      setDepartments(idea.departments || []);
     }
   }, [idea]);
 
@@ -92,18 +106,115 @@ export function EditIdeaModal({ idea, open, onOpenChange, onSuccess, onMoveToPro
     }
   };
 
+  const toggleDepartment = (dept: string) => {
+    setDepartments(prev =>
+      prev.includes(dept)
+        ? prev.filter(d => d !== dept)
+        : [...prev, dept]
+    );
+  };
+
+  const addCustomDepartment = () => {
+    if (customDepartment.trim() && !departments.includes(customDepartment.trim())) {
+      setDepartments(prev => [...prev, customDepartment.trim()]);
+      setCustomDepartment('');
+    }
+  };
+
+  const handleAISuggestDepartments = async () => {
+    if (!formData.title.trim() && !formData.description.trim()) {
+      alert('Please enter a title or description first');
+      return;
+    }
+
+    setAiSuggestingDepts(true);
+    try {
+      const response = await apiClient.autoFill({
+        field_name: 'departments',
+        existing_data: {
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+        }
+      });
+
+      if (response.result) {
+        const suggestedRaw = response.result
+          .split(/[,\n]/)
+          .map(d => d.trim())
+          .filter(d => d.length > 0);
+
+        const matchedDepts = suggestedRaw.filter(suggested => 
+          predefinedDepartments.some(predefined => 
+            predefined.toLowerCase().includes(suggested.toLowerCase()) || 
+            suggested.toLowerCase().includes(predefined.toLowerCase())
+          )
+        ).map(suggested => {
+          return predefinedDepartments.find(predefined => 
+            predefined.toLowerCase().includes(suggested.toLowerCase()) || 
+            suggested.toLowerCase().includes(predefined.toLowerCase())
+          ) || suggested;
+        });
+
+        const customDepts = suggestedRaw.filter(suggested => 
+          !predefinedDepartments.some(predefined => 
+            predefined.toLowerCase().includes(suggested.toLowerCase()) || 
+            suggested.toLowerCase().includes(predefined.toLowerCase())
+          )
+        ).slice(0, 3);
+
+        setDepartments(prev => [...new Set([...prev, ...matchedDepts, ...customDepts])]);
+      }
+    } catch (error) {
+      console.error('Failed to suggest departments:', error);
+      alert('Failed to suggest departments with AI.');
+    } finally {
+      setAiSuggestingDepts(false);
+    }
+  };
+
+  const handleAIEnhance = async () => {
+    if (!formData.title.trim()) {
+      alert('Please enter a title first');
+      return;
+    }
+
+    setAiEnhancing(true);
+    try {
+      const response = await apiClient.enhanceIdea({
+        title: formData.title,
+        description: formData.description || undefined,
+        possible_outcome: formData.possible_outcome || undefined,
+        departments: departments.length > 0 ? departments : undefined,
+        category: formData.category || undefined,
+      });
+
+      if (response.success && response.enhanced_data) {
+        setFormData(prev => ({
+          ...prev,
+          title: response.enhanced_data.title || prev.title,
+          description: response.enhanced_data.description || prev.description,
+          possible_outcome: response.enhanced_data.possible_outcome || prev.possible_outcome,
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to enhance idea:', error);
+      alert('Failed to enhance idea with AI.');
+    } finally {
+      setAiEnhancing(false);
+    }
+  };
+
   if (showDeleteConfirm) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-[40vw]">
+        <DialogContent className="max-w-md">
           <div className="p-6">
-            <DialogHeader>
-              <DialogTitle>Delete Idea</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete this idea? This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="mt-6">
+            <DialogTitle className="text-xl font-bold mb-2">Delete Idea</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground mb-6">
+              Are you sure you want to delete this idea? This action cannot be undone.
+            </DialogDescription>
+            <DialogFooter className="flex gap-2">
               <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
                 Cancel
               </Button>
@@ -120,160 +231,210 @@ export function EditIdeaModal({ idea, open, onOpenChange, onSuccess, onMoveToPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[70vw] max-w-6xl max-h-[90vh] flex flex-col overflow-hidden">
-        <div className="px-6 pt-6">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-              <Lightbulb className="h-6 w-6 text-yellow-500" />
-              Edit Idea
-            </DialogTitle>
-            <DialogDescription className="text-base">
-              Update your idea details
-            </DialogDescription>
-          </DialogHeader>
+      <DialogContent className="max-w-2xl p-0">
+        {/* Header with Icon and Move to Project Button */}
+        <div className="px-6 pt-6 pb-4 border-b">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
+                <Lightbulb className="w-5 h-5 text-white" />
+              </div>
+              <DialogTitle className="text-xl font-bold">Edit Idea</DialogTitle>
+            </div>
+            {onMoveToProject && (
+              <Button 
+                onClick={handleMoveToProject} 
+                className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-md"
+                size="sm"
+              >
+                <Rocket className="h-4 w-4 mr-1" />
+                Move to Project
+              </Button>
+            )}
+          </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+        {/* Content */}
+        <div className="px-6 py-4 space-y-4">
           {/* Title */}
-          <div>
-            <Label htmlFor="edit-idea-title" className="text-base font-semibold">Title</Label>
+          <div className="space-y-2">
+            <Label htmlFor="edit-idea-title" className="text-sm font-medium">Title</Label>
             <Input
               id="edit-idea-title"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               placeholder="Enter your idea title"
-              className="mt-2"
+              className="h-9"
             />
           </div>
 
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column: Description */}
-            <div>
-              <Label htmlFor="edit-idea-description" className="text-base font-semibold">Description</Label>
-              <textarea
-                id="edit-idea-description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Describe your idea"
-                className="mt-2 w-full min-h-[200px] rounded-md border border-input bg-background px-3 py-2 text-sm"
-              />
-            </div>
-
-            {/* Right Column: Possible Outcome */}
-            <div>
-              <Label htmlFor="edit-idea-outcome" className="text-base font-semibold">Possible Outcome (Optional)</Label>
-              <textarea
-                id="edit-idea-outcome"
-                value={formData.possible_outcome}
-                onChange={(e) => setFormData({ ...formData, possible_outcome: e.target.value })}
-                placeholder="What could be the expected outcome?"
-                className="mt-2 w-full min-h-[200px] rounded-md border border-input bg-background px-3 py-2 text-sm"
-              />
-            </div>
+          {/* Description */}
+          <div className="space-y-2">
+            <Label htmlFor="edit-idea-description" className="text-sm font-medium">Description</Label>
+            <textarea
+              id="edit-idea-description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Describe your idea"
+              className="w-full h-20 rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            />
           </div>
 
-          {/* Status & Category */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="edit-idea-status" className="text-base font-semibold">Status</Label>
-              <select
-                id="edit-idea-status"
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          {/* Possible Outcome */}
+          <div className="space-y-2">
+            <Label htmlFor="edit-idea-outcome" className="text-sm font-medium">Possible Outcome (Optional)</Label>
+            <textarea
+              id="edit-idea-outcome"
+              value={formData.possible_outcome}
+              onChange={(e) => setFormData({ ...formData, possible_outcome: e.target.value })}
+              placeholder="What could be the expected outcome?"
+              className="w-full h-20 rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            />
+          </div>
+
+          {/* Departments Affected */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Departments Affected</Label>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="sm"
+                onClick={handleAISuggestDepartments}
+                disabled={aiSuggestingDepts}
+                className="h-7 text-xs px-2"
               >
-                <option value="inbox">Inbox</option>
-                <option value="planning">Planning</option>
-                <option value="in_progress">In Progress</option>
-                <option value="under_review">Under Review</option>
-                <option value="completed">Completed</option>
-              </select>
+                {aiSuggestingDepts ? (
+                  <>
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary mr-1"></div>
+                    Suggesting...
+                  </>
+                ) : (
+                  <>
+                    <Bot className="h-3 w-3 mr-1" />
+                    AI Suggest
+                  </>
+                )}
+              </Button>
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              {predefinedDepartments.map((dept) => (
+                <button
+                  key={dept}
+                  type="button"
+                  onClick={() => toggleDepartment(dept)}
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                    departments.includes(dept)
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                  }`}
+                >
+                  {dept}
+                </button>
+              ))}
             </div>
 
-            <div>
-              <Label htmlFor="edit-idea-category" className="text-base font-semibold">Category (Optional)</Label>
+            <div className="flex gap-2">
               <Input
-                id="edit-idea-category"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                placeholder="e.g., Product, Marketing"
-                className="mt-2"
+                value={customDepartment}
+                onChange={(e) => setCustomDepartment(e.target.value)}
+                placeholder="Add custom department..."
+                className="flex-1 h-8 text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addCustomDepartment();
+                  }
+                }}
               />
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm"
+                onClick={addCustomDepartment}
+                disabled={!customDepartment.trim()}
+                className="h-8 px-3"
+              >
+                Add
+              </Button>
             </div>
-          </div>
 
-          {/* Departments (Read-only) */}
-          {idea.departments && idea.departments.length > 0 && (
-            <div>
-              <Label className="text-base font-semibold">Departments</Label>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {idea.departments.map((dept, idx) => (
-                  <Badge key={idx} variant="secondary">
+            {/* Selected Departments */}
+            {departments.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 pt-2">
+                {departments.map((dept) => (
+                  <Badge
+                    key={dept}
+                    variant="secondary"
+                    className="text-xs pr-1"
+                  >
                     {dept}
+                    <button
+                      onClick={() => toggleDepartment(dept)}
+                      className="ml-1 hover:bg-muted rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
                   </Badge>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
-          {/* Metadata */}
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-            <div>
-              <Label className="text-sm font-semibold text-muted-foreground">Created</Label>
-              <p className="mt-2 text-sm">
-                {new Date(idea.created_at).toLocaleDateString()}
-              </p>
-            </div>
-            <div>
-              <Label className="text-sm font-semibold text-muted-foreground">Last Updated</Label>
-              <p className="mt-2 text-sm">
-                {new Date(idea.updated_at).toLocaleDateString()}
-              </p>
-            </div>
+          {/* Improve with AI Assistant */}
+          <div className="relative">
+            <Button 
+              type="button" 
+              className={`w-full h-10 bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 hover:from-purple-700 hover:via-blue-700 hover:to-cyan-700 text-white shadow-lg transition-all duration-300 ${
+                aiEnhancing ? 'scale-105 shadow-xl' : ''
+              }`}
+              onClick={handleAIEnhance}
+              disabled={aiEnhancing || !formData.title.trim()}
+            >
+              {aiEnhancing ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 animate-pulse" />
+                    <span className="animate-pulse">AI is enhancing your idea...</span>
+                    <Sparkles className="h-4 w-4 animate-pulse" />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Bot className="h-4 w-4 mr-2" />
+                  Improve with AI Assistant
+                </>
+              )}
+            </Button>
+            {aiEnhancing && (
+              <div className="absolute inset-0 rounded-md bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 opacity-30 blur-xl animate-pulse"></div>
+            )}
           </div>
         </div>
 
-        <div className="px-6 pb-6 border-t pt-4 space-y-3">
-          {/* Primary Action */}
-          <Button onClick={handleUpdate} className="w-full" size="lg">
-            <Save className="h-4 w-4 mr-2" />
-            Save Changes
-          </Button>
-          
-          {/* Move to Project Action */}
-          {onMoveToProject && (
-            <Button 
-              variant="default" 
-              onClick={handleMoveToProject} 
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              size="lg"
-            >
-              <FolderSymlink className="h-4 w-4 mr-2" />
-              Move to Project
-            </Button>
-          )}
-          
-          {/* Secondary Actions */}
-          <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" onClick={handleArchive}>
-              <Archive className="h-4 w-4 mr-2" />
+        {/* Footer Actions */}
+        <div className="flex items-center justify-between gap-2 px-6 py-4 border-t bg-muted/20">
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleArchive} className="h-9">
+              <Archive className="h-4 w-4 mr-1" />
               Archive
             </Button>
-            <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
-              <Trash2 className="h-4 w-4 mr-2" />
+            <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(true)} className="h-9 text-red-600 border-red-200 hover:bg-red-50">
+              <Trash2 className="h-4 w-4 mr-1" />
               Delete
             </Button>
           </div>
-          
-          {/* Close */}
-          <Button variant="ghost" onClick={handleClose} className="w-full">
-            <X className="h-4 w-4 mr-2" />
-            Close
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleClose} className="h-9">
+              Cancel
+            </Button>
+            <Button onClick={handleUpdate} size="sm" className="h-9">
+              Update Idea
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
-
