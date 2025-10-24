@@ -5,15 +5,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Badge } from '../../components/ui/badge';
 import { apiClient } from '../../services/api';
 import type { IdeaResponse } from '../../types/api';
-import { AddIdeaModal, EditIdeaModal } from '../../components/modals';
+import { AddIdeaModal, EditIdeaModal, AddProjectModal, AddTaskModal } from '../../components/modals';
 
 export function IdeasPage() {
   const [ideas, setIdeas] = useState<IdeaResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddProjectModal, setShowAddProjectModal] = useState(false);
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [selectedIdea, setSelectedIdea] = useState<IdeaResponse | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [projectInitialData, setProjectInitialData] = useState<{
+    title?: string;
+    description?: string;
+    desired_outcomes?: string;
+  } | undefined>(undefined);
+  const [taskContext, setTaskContext] = useState<{
+    projectId: string;
+    projectData: {
+      title: string;
+      description?: string;
+      project_brief?: string;
+      desired_outcomes?: string;
+    };
+  } | null>(null);
 
   useEffect(() => {
     loadIdeas();
@@ -48,6 +64,28 @@ export function IdeasPage() {
   const handleCloseEditModal = () => {
     setShowEditModal(false);
     setSelectedIdea(null);
+  };
+
+  const handleMoveToProject = (idea: IdeaResponse) => {
+    setProjectInitialData({
+      title: idea.title,
+      description: idea.description || '',
+      desired_outcomes: idea.possible_outcome || '',
+    });
+    setShowAddProjectModal(true);
+  };
+
+  const handleProjectCreated = (projectId: string, projectData: {
+    title: string;
+    description?: string;
+    project_brief?: string;
+    desired_outcomes?: string;
+  }) => {
+    setTaskContext({
+      projectId,
+      projectData,
+    });
+    setShowAddTaskModal(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -199,6 +237,23 @@ export function IdeasPage() {
         open={showEditModal}
         onOpenChange={handleCloseEditModal}
         onSuccess={loadIdeas}
+        onMoveToProject={handleMoveToProject}
+      />
+
+      <AddProjectModal
+        open={showAddProjectModal}
+        onOpenChange={setShowAddProjectModal}
+        onSuccess={loadIdeas}
+        onProjectCreated={handleProjectCreated}
+        initialData={projectInitialData}
+      />
+
+      <AddTaskModal
+        open={showAddTaskModal}
+        onOpenChange={setShowAddTaskModal}
+        onSuccess={loadIdeas}
+        projectId={taskContext?.projectId}
+        projectContext={taskContext?.projectData}
       />
     </div>
   );

@@ -4,7 +4,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Lightbulb, X, Save, Trash2, Archive } from 'lucide-react';
+import { Lightbulb, X, Save, Trash2, Archive, FolderSymlink } from 'lucide-react';
 import { apiClient } from '../../services/api';
 import type { IdeaResponse, IdeaUpdate } from '../../types/api';
 
@@ -13,9 +13,10 @@ interface EditIdeaModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  onMoveToProject?: (idea: IdeaResponse) => void;
 }
 
-export function EditIdeaModal({ idea, open, onOpenChange, onSuccess }: EditIdeaModalProps) {
+export function EditIdeaModal({ idea, open, onOpenChange, onSuccess, onMoveToProject }: EditIdeaModalProps) {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -81,6 +82,13 @@ export function EditIdeaModal({ idea, open, onOpenChange, onSuccess }: EditIdeaM
     } catch (error) {
       console.error('Failed to archive idea:', error);
       alert('Failed to archive idea');
+    }
+  };
+
+  const handleMoveToProject = () => {
+    if (idea && onMoveToProject) {
+      onMoveToProject(idea);
+      handleClose();
     }
   };
 
@@ -242,6 +250,18 @@ export function EditIdeaModal({ idea, open, onOpenChange, onSuccess }: EditIdeaM
                 Save Changes
               </Button>
             </div>
+            
+            {onMoveToProject && (
+              <Button 
+                variant="default" 
+                onClick={handleMoveToProject} 
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                <FolderSymlink className="h-4 w-4 mr-2" />
+                Move to Project
+              </Button>
+            )}
+            
             <Button variant="outline" onClick={handleClose} className="w-full">
               <X className="h-4 w-4 mr-2" />
               Close

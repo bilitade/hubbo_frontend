@@ -350,6 +350,48 @@ class ApiClient {
     return response.data;
   }
 
+  async enhanceProject(data: {
+    title: string;
+    description?: string;
+    desired_outcomes?: string;
+  }): Promise<{
+    success: boolean;
+    enhanced_data: {
+      title?: string;
+      description?: string;
+      tag?: string;
+      brief?: string[];
+      brief_text?: string;
+      desired_outcomes?: string[];
+      desired_outcomes_text?: string;
+    };
+    raw_response: string;
+  }> {
+    const response = await this.client.post('/api/v1/ai/enhance/enhance-project', data);
+    return response.data;
+  }
+
+  async generateTasks(data: {
+    project_title: string;
+    project_description?: string;
+    project_brief?: string;
+    project_outcomes?: string;
+    workflow_step?: number;
+    num_tasks?: number;
+  }): Promise<{
+    success: boolean;
+    tasks: Array<{
+      title: string;
+      description: string;
+      priority: string;
+      activities: string[];
+    }>;
+    raw_response: string;
+  }> {
+    const response = await this.client.post('/api/v1/ai/enhance/generate-tasks', data);
+    return response.data;
+  }
+
   // File Storage
   async uploadFile(file: File, category = 'general', index = true): Promise<FileUploadResponse> {
     const formData = new FormData();
@@ -507,9 +549,9 @@ class ApiClient {
   }
 
   // Tasks
-  async listTasks(skip = 0, limit = 100, status?: string, project_id?: string): Promise<TaskListResponse> {
+  async listTasks(skip = 0, limit = 100, status?: string, project_id?: string, backlog?: string): Promise<TaskListResponse> {
     const response = await this.client.get<TaskListResponse>('/api/v1/tasks/', {
-      params: { skip, limit, status, project_id },
+      params: { skip, limit, status, project_id, backlog },
     });
     return response.data;
   }

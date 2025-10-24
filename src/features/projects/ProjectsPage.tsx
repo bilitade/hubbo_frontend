@@ -5,17 +5,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Badge } from '../../components/ui/badge';
 import { apiClient } from '../../services/api';
 import type { ProjectResponse } from '../../types/api';
-import { AddProjectModal, EditProjectModal } from '../../components/modals';
+import { AddProjectModal, EditProjectModal, AddTaskModal } from '../../components/modals';
 
 export function ProjectsPage() {
   const [projects, setProjects] = useState<ProjectResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<ProjectResponse | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [filterBacklog, setFilterBacklog] = useState<string>('');
+  const [taskContext, setTaskContext] = useState<{
+    projectId: string;
+    projectData: {
+      title: string;
+      description?: string;
+      project_brief?: string;
+      desired_outcomes?: string;
+    };
+  } | null>(null);
 
   useEffect(() => {
     loadProjects();
@@ -56,6 +66,32 @@ export function ProjectsPage() {
   const handleCloseEditModal = () => {
     setShowEditModal(false);
     setSelectedProject(null);
+  };
+
+  const handleProjectCreated = (projectId: string, projectData: {
+    title: string;
+    description?: string;
+    project_brief?: string;
+    desired_outcomes?: string;
+  }) => {
+    setTaskContext({
+      projectId,
+      projectData,
+    });
+    setShowAddTaskModal(true);
+  };
+
+  const handleGenerateTasksForProject = (projectId: string, projectData: {
+    title: string;
+    description?: string;
+    project_brief?: string;
+    desired_outcomes?: string;
+  }) => {
+    setTaskContext({
+      projectId,
+      projectData,
+    });
+    setShowAddTaskModal(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -247,6 +283,7 @@ export function ProjectsPage() {
         open={showAddModal}
         onOpenChange={setShowAddModal}
         onSuccess={loadProjects}
+        onProjectCreated={handleProjectCreated}
       />
 
       <EditProjectModal
@@ -258,6 +295,15 @@ export function ProjectsPage() {
           loadProjects();
           handleCloseEditModal();
         }}
+        onGenerateTasks={handleGenerateTasksForProject}
+      />
+
+      <AddTaskModal
+        open={showAddTaskModal}
+        onOpenChange={setShowAddTaskModal}
+        onSuccess={loadProjects}
+        projectId={taskContext?.projectId}
+        projectContext={taskContext?.projectData}
       />
     </div>
   );

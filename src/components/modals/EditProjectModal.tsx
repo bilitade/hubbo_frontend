@@ -4,7 +4,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Save, X, Edit, Archive, Trash2, FolderKanban } from 'lucide-react';
+import { Save, X, Edit, Archive, Trash2, FolderKanban, CheckSquare } from 'lucide-react';
 import { apiClient } from '../../services/api';
 import type { ProjectResponse, ProjectUpdate } from '../../types/api';
 
@@ -14,9 +14,15 @@ interface EditProjectModalProps {
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
   onDelete: () => void;
+  onGenerateTasks?: (projectId: string, projectData: {
+    title: string;
+    description?: string;
+    project_brief?: string;
+    desired_outcomes?: string;
+  }) => void;
 }
 
-export function EditProjectModal({ project, open, onOpenChange, onSuccess, onDelete }: EditProjectModalProps) {
+export function EditProjectModal({ project, open, onOpenChange, onSuccess, onDelete, onGenerateTasks }: EditProjectModalProps) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editFormData, setEditFormData] = useState<Partial<ProjectUpdate>>({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -74,6 +80,18 @@ export function EditProjectModal({ project, open, onOpenChange, onSuccess, onDel
     } catch (error) {
       console.error('Failed to delete project:', error);
       alert('Failed to delete project');
+    }
+  };
+
+  const handleGenerateTasks = () => {
+    if (onGenerateTasks) {
+      onGenerateTasks(project.id, {
+        title: project.title,
+        description: project.description || '',
+        project_brief: project.project_brief || '',
+        desired_outcomes: project.desired_outcomes || '',
+      });
+      handleClose();
     }
   };
 
@@ -308,6 +326,17 @@ export function EditProjectModal({ project, open, onOpenChange, onSuccess, onDel
             </div>
           ) : (
             <div className="flex flex-col gap-3">
+              {onGenerateTasks && (
+                <Button 
+                  variant="default"
+                  onClick={handleGenerateTasks} 
+                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                >
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                  Generate Tasks with AI
+                </Button>
+              )}
+              
               <div className="flex gap-2">
                 <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)} className="flex-1">
                   <Trash2 className="h-4 w-4 mr-2" />

@@ -4,7 +4,7 @@ import { Badge } from '../../components/ui/badge';
 import { Lightbulb, FolderKanban, CheckCircle2, User } from 'lucide-react';
 import { apiClient } from '../../services/api';
 import type { IdeaResponse, ProjectResponse } from '../../types/api';
-import { AddIdeaModal, EditProjectModal } from '../../components/modals';
+import { AddIdeaModal, EditProjectModal, AddTaskModal } from '../../components/modals';
 
 interface KanbanColumn {
   id: string;
@@ -22,6 +22,16 @@ export function DashboardPage() {
   const [selectedProject, setSelectedProject] = useState<ProjectResponse | null>(null);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showAddIdeaModal, setShowAddIdeaModal] = useState(false);
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+  const [taskContext, setTaskContext] = useState<{
+    projectId: string;
+    projectData: {
+      title: string;
+      description?: string;
+      project_brief?: string;
+      desired_outcomes?: string;
+    };
+  } | null>(null);
 
   useEffect(() => {
     loadData();
@@ -57,6 +67,19 @@ export function DashboardPage() {
   const handleCloseProjectModal = () => {
     setShowProjectModal(false);
     setSelectedProject(null);
+  };
+
+  const handleGenerateTasks = (projectId: string, projectData: {
+    title: string;
+    description?: string;
+    project_brief?: string;
+    desired_outcomes?: string;
+  }) => {
+    setTaskContext({
+      projectId,
+      projectData,
+    });
+    setShowAddTaskModal(true);
   };
 
   const columns: KanbanColumn[] = [
@@ -274,6 +297,15 @@ export function DashboardPage() {
           loadData();
           handleCloseProjectModal();
         }}
+        onGenerateTasks={handleGenerateTasks}
+      />
+
+      <AddTaskModal
+        open={showAddTaskModal}
+        onOpenChange={setShowAddTaskModal}
+        onSuccess={loadData}
+        projectId={taskContext?.projectId}
+        projectContext={taskContext?.projectData}
       />
     </div>
   );

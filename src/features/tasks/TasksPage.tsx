@@ -1,48 +1,58 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit, MessageSquare, Paperclip, CheckSquare } from 'lucide-react';
+import { Plus, Edit, Trash2, User } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { Badge } from '../../components/ui/badge';
-import { Checkbox } from '../../components/ui/checkbox';
 import { apiClient } from '../../services/api';
-import type { 
-  TaskResponse, 
-  TaskCreate, 
-  TaskUpdate, 
-  TaskDetailResponse,
-  TaskActivityCreate,
-  TaskCommentCreate
-} from '../../types/api';
+import type { TaskResponse, ProjectResponse } from '../../types/api';
 
 export function TasksPage() {
   const [tasks, setTasks] = useState<TaskResponse[]>([]);
+  const [projects, setProjects] = useState<Record<string, ProjectResponse>>({});
   const [loading, setLoading] = useState(true);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showDetailDialog, setShowDetailDialog] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<TaskDetailResponse | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('');
-  const [newComment, setNewComment] = useState('');
-  const [newActivity, setNewActivity] = useState('');
-  const [formData, setFormData] = useState<TaskCreate>({
-    title: '',
-    description: '',
-    status: 'in_progress',
-    backlog: '',
-  });
+  const [filterBacklog, setFilterBacklog] = useState<string>('');
 
   useEffect(() => {
     loadTasks();
-  }, [filterStatus]);
+  }, [filterStatus, filterBacklog]);
 
   const loadTasks = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.listTasks(0, 100, filterStatus || undefined);
+      
+      // Fetch tasks with filters
+      const response = await apiClient.listTasks(
+        0, 
+        100, 
+        filterStatus || undefined,
+        undefined, // project_id filter
+        filterBacklog || undefined // backlog filter
+      );
+      
       setTasks(response.tasks);
+      
+      // Fetch project details for tasks that have project_id
+      const uniqueProjectIds = [...new Set(
+        response.tasks
+          .filter(task => task.project_id)
+          .map(task => task.project_id!)
+      )];
+      
+      if (uniqueProjectIds.length > 0) {
+        const projectPromises = uniqueProjectIds.map(id => 
+          apiClient.getProject(id).catch(() => null)
+        );
+        const projectResults = await Promise.all(projectPromises);
+        
+        const projectsMap: Record<string, ProjectResponse> = {};
+        projectResults.forEach((project, idx) => {
+          if (project) {
+            projectsMap[uniqueProjectIds[idx]] = project;
+          }
+        });
+        
+        setProjects(projectsMap);
+      }
     } catch (error) {
       console.error('Failed to load tasks:', error);
     } finally {
@@ -50,475 +60,249 @@ export function TasksPage() {
     }
   };
 
-  const handleCreate = async () => {
-    try {
-      await apiClient.createTask(formData);
-      setShowCreateDialog(false);
-      setFormData({
-        title: '',
-        description: '',
-        status: 'in_progress',
-        backlog: '',
-      });
-      loadTasks();
-    } catch (error) {
-      console.error('Failed to create task:', error);
-    }
-  };
-
-  const handleUpdate = async () => {
-    if (!selectedTask) return;
-    try {
-      const updateData: TaskUpdate = {
-        title: formData.title,
-        description: formData.description,
-        status: formData.status,
-        backlog: formData.backlog,
-      };
-      await apiClient.updateTask(selectedTask.id, updateData);
-      setShowEditDialog(false);
-      setSelectedTask(null);
-      loadTasks();
-    } catch (error) {
-      console.error('Failed to update task:', error);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (taskId: string) => {
     if (!confirm('Are you sure you want to delete this task?')) return;
     try {
-      await apiClient.deleteTask(id);
+      await apiClient.deleteTask(taskId);
       loadTasks();
     } catch (error) {
       console.error('Failed to delete task:', error);
+      alert('Failed to delete task');
     }
   };
 
-  const openEditDialog = (task: TaskResponse) => {
-    setFormData({
-      title: task.title,
-      description: task.description || '',
-      status: task.status,
-      backlog: task.backlog || '',
-    });
-    loadTaskDetails(task.id).then(() => {
-      setShowEditDialog(true);
-    });
-  };
-
-  const loadTaskDetails = async (taskId: string) => {
-    try {
-      const details = await apiClient.getTask(taskId);
-      setSelectedTask(details);
-    } catch (error) {
-      console.error('Failed to load task details:', error);
-    }
-  };
-
-  const openDetailDialog = async (task: TaskResponse) => {
-    await loadTaskDetails(task.id);
-    setShowDetailDialog(true);
-  };
-
-  const handleAddComment = async () => {
-    if (!selectedTask || !newComment.trim()) return;
-    try {
-      await apiClient.createTaskComment(selectedTask.id, { content: newComment });
-      setNewComment('');
-      await loadTaskDetails(selectedTask.id);
-    } catch (error) {
-      console.error('Failed to add comment:', error);
-    }
-  };
-
-  const handleAddActivity = async () => {
-    if (!selectedTask || !newActivity.trim()) return;
-    try {
-      const activityData: TaskActivityCreate = {
-        title: newActivity,
-        completed: false,
-      };
-      await apiClient.createTaskActivity(selectedTask.id, activityData);
-      setNewActivity('');
-      await loadTaskDetails(selectedTask.id);
-    } catch (error) {
-      console.error('Failed to add activity:', error);
-    }
-  };
-
-  const handleToggleActivity = async (activityId: string, completed: boolean) => {
-    if (!selectedTask) return;
-    try {
-      await apiClient.updateTaskActivity(selectedTask.id, activityId, !completed);
-      await loadTaskDetails(selectedTask.id);
-    } catch (error) {
-      console.error('Failed to toggle activity:', error);
-    }
-  };
-
-  const handleDeleteActivity = async (activityId: string) => {
-    if (!selectedTask) return;
-    try {
-      await apiClient.deleteTaskActivity(selectedTask.id, activityId);
-      await loadTaskDetails(selectedTask.id);
-    } catch (error) {
-      console.error('Failed to delete activity:', error);
-    }
-  };
-
-  const handleDeleteComment = async (commentId: string) => {
-    if (!selectedTask) return;
-    try {
-      await apiClient.deleteTaskComment(selectedTask.id, commentId);
-      await loadTaskDetails(selectedTask.id);
-    } catch (error) {
-      console.error('Failed to delete comment:', error);
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
+  const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      todo: 'bg-gray-500',
-      in_progress: 'bg-blue-500',
-      in_review: 'bg-yellow-500',
-      completed: 'bg-green-500',
-      blocked: 'bg-red-500',
+      'in_progress': 'bg-blue-100 text-blue-700',
+      'completed': 'bg-green-100 text-green-700',
+      'blocked': 'bg-red-100 text-red-700',
+      'cancelled': 'bg-gray-100 text-gray-700',
     };
-    return <Badge className={colors[status] || 'bg-gray-500'}>{status.replace('_', ' ')}</Badge>;
+    return colors[status] || 'bg-gray-100 text-gray-700';
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-full">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading tasks...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Tasks</h1>
-          <p className="text-muted-foreground">Manage and track your tasks</p>
+          <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
+          <p className="text-muted-foreground">
+            Manage and track all tasks across projects
+          </p>
         </div>
-        <Button onClick={() => setShowCreateDialog(true)}>
+        <Button onClick={() => alert('Use Project modal to generate tasks')}>
           <Plus className="h-4 w-4 mr-2" />
-          New Task
+          Add Task
         </Button>
       </div>
 
-      {/* Filter */}
-      <div className="mb-6">
-        <Label htmlFor="filter-status">Status</Label>
-        <select
-          id="filter-status"
-          className="flex h-10 w-48 rounded-md border border-input bg-background px-3 py-2 text-sm"
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-        >
-          <option value="">All</option>
-          <option value="todo">To Do</option>
-          <option value="in_progress">In Progress</option>
-          <option value="in_review">In Review</option>
-          <option value="completed">Completed</option>
-          <option value="blocked">Blocked</option>
-        </select>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {tasks.map((task) => (
-          <Card 
-            key={task.id} 
-            className="hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => openDetailDialog(task)}
+      {/* Filters */}
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <CardTitle className="text-lg">{task.title}</CardTitle>
-                {getStatusBadge(task.status)}
-              </div>
-              {task.backlog && (
-                <CardDescription className="text-xs">Backlog: {task.backlog}</CardDescription>
-              )}
-            </CardHeader>
-            <CardContent>
-              {task.description && (
-                <p className="text-sm text-muted-foreground mb-4 line-clamp-3">{task.description}</p>
-              )}
-              {task.due_date && (
-                <p className="text-xs text-muted-foreground mb-2">
-                  Due: {new Date(task.due_date).toLocaleDateString()}
-                </p>
-              )}
-              <div className="flex gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openEditDialog(task);
-                  }}
-                >
-                  <Edit className="h-3 w-3 mr-1" />
-                  Edit
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(task.id);
-                  }}
-                >
-                  <Trash2 className="h-3 w-3 mr-1" />
-                  Delete
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+            <option value="">All Statuses</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+            <option value="blocked">Blocked</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div className="flex-1">
+          <select
+            value={filterBacklog}
+            onChange={(e) => setFilterBacklog(e.target.value)}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">All Backlogs</option>
+            <option value="business_innovation">Business & Innovation</option>
+            <option value="engineering">Engineering</option>
+            <option value="output_adoption">Outcomes & Adoption</option>
+          </select>
+        </div>
       </div>
 
-      {/* Create Dialog */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Create New Task</DialogTitle>
-            <DialogDescription>Add a new task to your list</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="title">Title *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Enter task title"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <textarea
-                id="description"
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Describe the task"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="status">Status</Label>
-                <select
-                  id="status"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                >
-                  <option value="todo">To Do</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="in_review">In Review</option>
-                  <option value="completed">Completed</option>
-                  <option value="blocked">Blocked</option>
-                </select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="backlog">Backlog</Label>
-                <Input
-                  id="backlog"
-                  value={formData.backlog}
-                  onChange={(e) => setFormData({ ...formData, backlog: e.target.value })}
-                  placeholder="Optional"
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreate}>Create Task</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Task</DialogTitle>
-            <DialogDescription>Update task details</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="edit-title">Title *</Label>
-              <Input
-                id="edit-title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-description">Description</Label>
-              <textarea
-                id="edit-description"
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-status">Status</Label>
-                <select
-                  id="edit-status"
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                >
-                  <option value="todo">To Do</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="in_review">In Review</option>
-                  <option value="completed">Completed</option>
-                  <option value="blocked">Blocked</option>
-                </select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-backlog">Backlog</Label>
-                <Input
-                  id="edit-backlog"
-                  value={formData.backlog}
-                  onChange={(e) => setFormData({ ...formData, backlog: e.target.value })}
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleUpdate}>Update Task</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Detail Dialog */}
-      <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{selectedTask?.title}</DialogTitle>
-            <DialogDescription>
-              {getStatusBadge(selectedTask?.status || '')}
-            </DialogDescription>
-          </DialogHeader>
-          {selectedTask && (
-            <div className="grid gap-6 py-4">
-              {/* Description */}
-              {selectedTask.description && (
-                <div>
-                  <h3 className="font-semibold mb-2">Description</h3>
-                  <p className="text-sm text-muted-foreground">{selectedTask.description}</p>
-                </div>
+      {/* Tasks Table */}
+      <div className="border rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-muted">
+              <tr>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Task Title</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Backlog</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Project ID</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Status</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Accountable</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Responsible</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Due Date</th>
+                <th className="px-4 py-3 text-right text-sm font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {tasks.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-4 py-12 text-center text-muted-foreground">
+                    No tasks found. Create tasks from projects using AI.
+                  </td>
+                </tr>
+              ) : (
+                tasks.map((task) => {
+                  const project = task.project_id ? projects[task.project_id] : null;
+                  const backlog = project?.backlog || task.backlog;
+                  
+                  return (
+                    <tr 
+                      key={task.id} 
+                      className="hover:bg-muted/50 transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <div>
+                          <p className="font-medium text-sm">{task.title}</p>
+                          {task.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-1 mt-1">
+                              {task.description}
+                            </p>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        {backlog ? (
+                          <Badge variant="secondary" className="text-xs">
+                            {backlog.replace('_', ' ').toUpperCase()}
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {project ? (
+                          <div className="flex flex-col gap-1">
+                            <code className="text-xs bg-muted px-2 py-1 rounded w-fit">
+                              {project.project_number || task.project_id.slice(0, 8) + '...'}
+                            </code>
+                            <span className="text-xs text-muted-foreground line-clamp-1">
+                              {project.title}
+                            </span>
+                          </div>
+                        ) : task.project_id ? (
+                          <code className="text-xs bg-muted px-2 py-1 rounded">
+                            {task.project_id.slice(0, 8)}...
+                          </code>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge className={`${getStatusColor(task.status)} text-xs`}>
+                          {task.status.replace('_', ' ')}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        {task.accountable_id ? (
+                          <div className="flex items-center gap-2">
+                            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                              <User className="h-3 w-3 text-primary" />
+                            </div>
+                            <span className="text-xs">{task.accountable_role || 'Assigned'}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Unassigned</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {task.assigned_to ? (
+                          <div className="flex items-center gap-2">
+                            <div className="h-6 w-6 rounded-full bg-green-500/10 flex items-center justify-center">
+                              <User className="h-3 w-3 text-green-600" />
+                            </div>
+                            <span className="text-xs">{task.responsible_role || 'Assigned'}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Unassigned</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {task.due_date ? (
+                          <span className="text-xs">
+                            {new Date(task.due_date).toLocaleDateString()}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">No due date</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => alert('Edit task: ' + task.id)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => handleDelete(task.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-              {/* Activities */}
-              <div>
-                <h3 className="font-semibold mb-2 flex items-center gap-2">
-                  <CheckSquare className="h-4 w-4" />
-                  Activities ({selectedTask.activities?.length || 0})
-                </h3>
-                <div className="space-y-2 mb-4">
-                  {selectedTask.activities?.map((activity) => (
-                    <div key={activity.id} className="flex items-center gap-2 p-2 bg-muted rounded">
-                      <Checkbox
-                        checked={activity.completed}
-                        onCheckedChange={() => handleToggleActivity(activity.id, activity.completed)}
-                      />
-                      <span className={activity.completed ? 'line-through text-muted-foreground' : ''}>
-                        {activity.title}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="ml-auto"
-                        onClick={() => handleDeleteActivity(activity.id)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Add new activity..."
-                    value={newActivity}
-                    onChange={(e) => setNewActivity(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddActivity()}
-                  />
-                  <Button onClick={handleAddActivity}>Add</Button>
-                </div>
-              </div>
-
-              {/* Comments */}
-              <div>
-                <h3 className="font-semibold mb-2 flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  Comments ({selectedTask.comments?.length || 0})
-                </h3>
-                <div className="space-y-2 mb-4">
-                  {selectedTask.comments?.map((comment) => (
-                    <div key={comment.id} className="p-3 bg-muted rounded">
-                      <div className="flex justify-between items-start mb-1">
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(comment.created_at).toLocaleString()}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleDeleteComment(comment.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                      <p className="text-sm">{comment.content}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <textarea
-                    className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    placeholder="Add a comment..."
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                  />
-                  <Button onClick={handleAddComment}>Post</Button>
-                </div>
-              </div>
-
-              {/* Attachments */}
-              {selectedTask.attachments && selectedTask.attachments.length > 0 && (
-                <div>
-                  <h3 className="font-semibold mb-2 flex items-center gap-2">
-                    <Paperclip className="h-4 w-4" />
-                    Attachments ({selectedTask.attachments.length})
-                  </h3>
-                  <div className="space-y-2">
-                    {selectedTask.attachments.map((attachment) => (
-                      <div key={attachment.id} className="p-2 bg-muted rounded flex justify-between items-center">
-                        <span className="text-sm">{attachment.file_name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {(attachment.file_size / 1024).toFixed(2)} KB
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-          <DialogFooter>
-            <Button onClick={() => setShowDetailDialog(false)}>Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Task Summary */}
+      {tasks.length > 0 && (
+        <div className="grid grid-cols-4 gap-4">
+          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <p className="text-xs text-muted-foreground mb-1">In Progress</p>
+            <p className="text-2xl font-bold text-blue-600">
+              {tasks.filter(t => t.status === 'in_progress').length}
+            </p>
+          </div>
+          <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <p className="text-xs text-muted-foreground mb-1">Completed</p>
+            <p className="text-2xl font-bold text-green-600">
+              {tasks.filter(t => t.status === 'completed').length}
+            </p>
+          </div>
+          <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <p className="text-xs text-muted-foreground mb-1">Blocked</p>
+            <p className="text-2xl font-bold text-red-600">
+              {tasks.filter(t => t.status === 'blocked').length}
+            </p>
+          </div>
+          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+            <p className="text-xs text-muted-foreground mb-1">Total Tasks</p>
+            <p className="text-2xl font-bold text-gray-600">
+              {tasks.length}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
