@@ -49,8 +49,10 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-14 z-40 h-[calc(100vh-3.5rem)] w-64 border-r bg-background transition-transform duration-200 md:translate-x-0 overflow-y-auto",
-          open ? "translate-x-0" : "-translate-x-full"
+          "fixed left-0 top-14 z-40 h-[calc(100vh-3.5rem)] border-r bg-background transition-all duration-300 overflow-y-auto",
+          "md:translate-x-0", // Always visible on desktop
+          open ? "w-64" : "w-16", // Width changes on desktop
+          open ? "translate-x-0" : "-translate-x-full md:translate-x-0" // Hide on mobile when closed
         )}
       >
         <div className="flex h-full flex-col py-2">
@@ -61,23 +63,35 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
             </Button>
           </div>
 
-          <nav className="flex-1 space-y-1 px-3 py-2">
+          <nav className="flex-1 space-y-1 px-2 py-2">
             {navigation.map((item) => (
               <NavLink
                 key={item.name}
                 to={item.href}
-                onClick={onClose}
+                onClick={(e) => {
+                  // Only close on mobile (screen width < 768px)
+                  if (window.innerWidth < 768) {
+                    onClose?.();
+                  }
+                }}
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors",
+                    "flex items-center gap-3 rounded-lg py-3 text-sm font-medium transition-colors",
+                    open ? "px-4" : "px-0 justify-center",
                     isActive
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   )
                 }
+                title={!open ? item.name : undefined} // Show tooltip when collapsed
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />
-                {item.name}
+                <span className={cn(
+                  "transition-all duration-300",
+                  open ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"
+                )}>
+                  {item.name}
+                </span>
               </NavLink>
             ))}
           </nav>

@@ -114,19 +114,9 @@ export function DashboardPage() {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex-shrink-0 mb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Project Board</h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="text-sm text-right">
-            <p className="font-medium">{user?.first_name} {user?.last_name}</p>
-            <p className="text-xs text-muted-foreground">{user?.role_title}</p>
-          </div>
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <User className="h-5 w-5 text-primary" />
-          </div>
-        </div>
+      <div className="flex-shrink-0 mb-4">
+        <h1 className="text-2xl font-bold">Project Board</h1>
+        <p className="text-sm text-muted-foreground">Track your ideas and projects</p>
       </div>
 
       {/* Kanban Board */}

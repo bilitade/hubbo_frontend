@@ -25,7 +25,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
-        <div className="mr-4 flex md:hidden">
+        <div className="mr-4 flex">
           <Button variant="ghost" size="icon" onClick={onMenuClick}>
             <Menu className="h-5 w-5" />
           </Button>
