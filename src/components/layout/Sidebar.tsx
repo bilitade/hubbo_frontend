@@ -68,6 +68,7 @@ export function Sidebar({ open = true, onClose }: SidebarProps) {
               <NavLink
                 key={item.name}
                 to={item.href}
+                end={item.href === '/dashboard'} // Only exact match for the Workflow tab
                 onClick={(e) => {
                   // Only close on mobile (screen width < 768px)
                   if (window.innerWidth < 768) {

@@ -16,6 +16,7 @@ import { AIPage } from './features/ai/AIPage';
 import { FilesPage } from './features/files/FilesPage';
 import { IdeasPage } from './features/ideas/IdeasPage';
 import { ProjectsPage } from './features/projects/ProjectsPage';
+import { ProjectProgressPage } from './features/projects/ProjectProgressPage';
 import { TasksPage } from './features/tasks/TasksPage';
 import { ExperimentsPage } from './features/experiments/ExperimentsPage';
 import { ProfilesPage } from './features/profiles/ProfilesPage';
@@ -45,6 +46,7 @@ function App() {
               <Route index element={<DashboardPage />} />
               <Route path="ideas" element={<IdeasPage />} />
               <Route path="projects" element={<ProjectsPage />} />
+              <Route path="projects/:projectId/progress" element={<ProjectProgressPage />} />
               <Route path="tasks" element={<TasksPage />} />
               <Route path="experiments" element={<ExperimentsPage />} />
               <Route path="users" element={<UsersPage />} />

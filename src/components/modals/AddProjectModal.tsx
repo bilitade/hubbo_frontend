@@ -93,7 +93,13 @@ export function AddProjectModal({ open, onOpenChange, onSuccess, onProjectCreate
     }
 
     try {
-      const createdProject = await apiClient.createProject(formData);
+      // Add due_date to formData before creating
+      const projectData = {
+        ...formData,
+        due_date: dueDate,
+      };
+
+      const createdProject = await apiClient.createProject(projectData);
 
       if (generateTasksAfter && onProjectCreated) {
         onProjectCreated(createdProject.id, {
