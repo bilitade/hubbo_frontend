@@ -22,7 +22,7 @@ interface SidebarProps {
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: Home },
+  { name: 'Workflow', href: '/', icon: Home },
   { name: 'Ideas', href: '/ideas', icon: Lightbulb },
   { name: 'Projects', href: '/projects', icon: FolderKanban },
   { name: 'Tasks', href: '/tasks', icon: CheckSquare },

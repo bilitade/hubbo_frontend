@@ -1,39 +1,33 @@
 import { useState, useEffect } from 'react';
-import { Edit, Mail, Users, Briefcase, Calendar } from 'lucide-react';
-import { Button } from '../../components/ui/button';
+import { useAuth } from '../../contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
+import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
-import { Badge } from '../../components/ui/badge';
-import { Alert, AlertDescription } from '../../components/ui/alert';
+import { User, Mail, Phone, Building, Briefcase, MapPin, Calendar, Save, X } from 'lucide-react';
 import { apiClient } from '../../services/api';
-import { useAuth } from '../../contexts/AuthContext';
 import type { ProfileResponse, ProfileUpdate } from '../../types/api';
 
 export function ProfilesPage() {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [formData, setFormData] = useState<ProfileUpdate>({
-    display_name: '',
-    avatar_url: '',
-    team: '',
-    position: '',
-    email: '',
-  });
+  const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editFormData, setEditFormData] = useState<Partial<ProfileUpdate>>({});
 
   useEffect(() => {
     loadProfile();
-  }, []);
+  }, [user]);
 
   const loadProfile = async () => {
+    if (!user) return;
+    
     try {
       setLoading(true);
-      // Get current user's profile
-      const data = await apiClient.getMyProfile();
-      setProfile(data);
+      const profileData = await apiClient.getMyProfile();
+      setProfile(profileData);
     } catch (error) {
       console.error('Failed to load profile:', error);
     } finally {
@@ -41,27 +35,37 @@ export function ProfilesPage() {
     }
   };
 
-  const handleUpdate = async () => {
-    if (!profile || !user) return;
-    try {
-      await apiClient.updateProfile(user.id, formData);
-      setShowEditDialog(false);
-      loadProfile();
-    } catch (error) {
-      console.error('Failed to update profile:', error);
+  const handleEditClick = () => {
+    if (profile) {
+      setEditFormData({
+        bio: profile.bio,
+        phone_number: profile.phone_number,
+        department: profile.department,
+        position: profile.position,
+        location: profile.location,
+        linkedin_url: profile.linkedin_url,
+        twitter_handle: profile.twitter_handle,
+      });
+      setShowEditModal(true);
     }
   };
 
-  const openEditDialog = () => {
+  const handleSaveEdit = async () => {
     if (!profile) return;
-    setFormData({
-      display_name: profile.display_name || '',
-      avatar_url: profile.avatar_url || '',
-      team: profile.team || '',
-      position: profile.position || '',
-      email: profile.email || '',
-    });
-    setShowEditDialog(true);
+
+    try {
+      await apiClient.updateProfile(profile.user_id, editFormData);
+      await loadProfile();
+      setShowEditModal(false);
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      alert('Failed to update profile');
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowEditModal(false);
+    setEditFormData({});
   };
 
   if (loading) {
@@ -77,222 +81,292 @@ export function ProfilesPage() {
 
   if (!profile) {
     return (
-      <div className="container mx-auto p-6">
-        <Alert>
-          <AlertDescription>
-            Profile not found. Please contact your administrator.
-          </AlertDescription>
-        </Alert>
+      <div className="flex items-center justify-center h-full">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>No Profile Found</CardTitle>
+            <CardDescription>Unable to load your profile information.</CardDescription>
+          </CardHeader>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">My Profile</h1>
-          <p className="text-muted-foreground">Manage your personal information</p>
+          <h1 className="text-3xl font-bold tracking-tight">My Profile</h1>
+          <p className="text-muted-foreground">
+            View and manage your personal information
+          </p>
         </div>
-        <Button onClick={openEditDialog}>
-          <Edit className="h-4 w-4 mr-2" />
+        <Button onClick={handleEditClick}>
+          <Save className="h-4 w-4 mr-2" />
           Edit Profile
         </Button>
       </div>
 
-      {/* Profile Header Card */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-6">
-            {/* Avatar */}
-            <div className="flex-shrink-0">
-              {profile.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  alt={profile.display_name || 'User'}
-                  className="h-24 w-24 rounded-full object-cover border-4 border-primary/10"
-                />
-              ) : (
-                <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center border-4 border-primary/20">
-                  <span className="text-3xl font-bold text-primary">
-                    {(profile.display_name || profile.email || 'U').charAt(0).toUpperCase()}
-                  </span>
+      {/* Profile Card */}
+      <Card className="overflow-hidden">
+        <div className="h-32 bg-gradient-to-r from-primary/80 to-primary/40" />
+        <CardHeader className="relative pb-0">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-4">
+              <div className="-mt-16 relative">
+                <div className="h-24 w-24 rounded-full bg-primary/10 border-4 border-background flex items-center justify-center">
+                  <User className="h-12 w-12 text-primary" />
+                </div>
+              </div>
+              <div className="pt-4">
+                <CardTitle className="text-2xl">
+                  {user?.first_name} {user?.last_name}
+                </CardTitle>
+                <CardDescription className="text-base">
+                  {profile.position || 'Position not set'} {profile.department && `• ${profile.department}`}
+                </CardDescription>
+                <div className="flex gap-2 mt-2">
+                  <Badge variant={profile.is_active ? "default" : "secondary"}>
+                    {profile.is_active ? 'Active' : 'Inactive'}
+                  </Badge>
+                  {profile.is_admin && (
+                    <Badge variant="destructive">Admin</Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-6 pt-6">
+          {/* Bio */}
+          {profile.bio && (
+            <div>
+              <h3 className="text-sm font-semibold text-muted-foreground mb-2">About</h3>
+              <p className="text-sm">{profile.bio}</p>
+            </div>
+          )}
+
+          {/* Contact Information */}
+          <div>
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3">Contact Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Mail className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Email</p>
+                  <p className="text-sm font-medium">{user?.email}</p>
+                </div>
+              </div>
+
+              {profile.phone_number && (
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Phone className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Phone</p>
+                    <p className="text-sm font-medium">{profile.phone_number}</p>
+                  </div>
+                </div>
+              )}
+
+              {profile.location && (
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <MapPin className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Location</p>
+                    <p className="text-sm font-medium">{profile.location}</p>
+                  </div>
+                </div>
+              )}
+
+              {profile.department && (
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Building className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Department</p>
+                    <p className="text-sm font-medium">{profile.department}</p>
+                  </div>
+                </div>
+              )}
+
+              {profile.position && (
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Briefcase className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Position</p>
+                    <p className="text-sm font-medium">{profile.position}</p>
+                  </div>
                 </div>
               )}
             </div>
+          </div>
 
-            {/* Profile Info */}
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold mb-1">
-                {profile.display_name || 'No Display Name'}
-              </h2>
-              {profile.position && (
-                <p className="text-lg text-muted-foreground mb-3">{profile.position}</p>
-              )}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {profile.team && (
-                  <Badge variant="secondary" className="text-sm">
-                    <Users className="h-3 w-3 mr-1" />
-                    {profile.team}
-                  </Badge>
+          {/* Social Links */}
+          {(profile.linkedin_url || profile.twitter_handle) && (
+            <div>
+              <h3 className="text-sm font-semibold text-muted-foreground mb-3">Social Links</h3>
+              <div className="flex gap-4">
+                {profile.linkedin_url && (
+                  <a 
+                    href={profile.linkedin_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    LinkedIn →
+                  </a>
                 )}
-                {profile.disabled ? (
-                  <Badge variant="destructive">Disabled</Badge>
-                ) : profile.needs_password_change ? (
-                  <Badge variant="outline" className="bg-yellow-500 text-white">
-                    Password Reset Required
-                  </Badge>
-                ) : (
-                  <Badge className="bg-green-500">Active</Badge>
+                {profile.twitter_handle && (
+                  <a 
+                    href={`https://twitter.com/${profile.twitter_handle}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Twitter →
+                  </a>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Account Information */}
+          <div className="border-t pt-6">
+            <h3 className="text-sm font-semibold text-muted-foreground mb-3">Account Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center gap-3">
+                <Calendar className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Joined</p>
+                  <p className="text-sm font-medium">
+                    {new Date(profile.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <Calendar className="h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-xs text-muted-foreground">Last Updated</p>
+                  <p className="text-sm font-medium">
+                    {new Date(profile.updated_at).toLocaleDateString()}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Contact Information */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Contact Information</CardTitle>
-          <CardDescription>Your contact details</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="flex items-start gap-3">
-              <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Email</p>
-                <p className="text-base">{profile.email || 'Not set'}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Briefcase className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Position</p>
-                <p className="text-base">{profile.position || 'Not set'}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Users className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Team</p>
-                <p className="text-base">{profile.team || 'Not set'}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Member Since</p>
-                <p className="text-base">
-                  {profile.created_at
-                    ? new Date(profile.created_at).toLocaleDateString()
-                    : 'N/A'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Account Status */}
-      {profile.disabled && (
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive">Account Disabled</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {profile.disabled_reason && (
-              <Alert>
-                <AlertDescription>
-                  <span className="font-semibold">Reason:</span> {profile.disabled_reason}
-                </AlertDescription>
-              </Alert>
-            )}
-            {profile.disabled_at && (
-              <p className="text-sm text-muted-foreground mt-2">
-                Disabled on: {new Date(profile.disabled_at).toLocaleString()}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {profile.needs_password_change && (
-        <Card className="border-yellow-500">
-          <CardHeader>
-            <CardTitle className="text-yellow-700">Password Change Required</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Alert>
-              <AlertDescription>
-                You need to change your password. Please update it from your account settings.
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Edit Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl">
+      {/* Edit Profile Modal */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Profile</DialogTitle>
-            <DialogDescription>Update your profile information</DialogDescription>
+            <DialogDescription>
+              Update your personal information
+            </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="display-name">Display Name</Label>
-              <Input
-                id="display-name"
-                value={formData.display_name || ''}
-                onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-                placeholder="John Doe"
+
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="bio">Bio</Label>
+              <textarea
+                id="bio"
+                value={editFormData.bio || ''}
+                onChange={(e) => setEditFormData({ ...editFormData, bio: e.target.value })}
+                placeholder="Tell us about yourself..."
+                className="mt-1 w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email || ''}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="john@example.com"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="position">Position</Label>
-              <Input
-                id="position"
-                value={formData.position || ''}
-                onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                placeholder="Software Engineer"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="team">Team</Label>
-              <Input
-                id="team"
-                value={formData.team || ''}
-                onChange={(e) => setFormData({ ...formData, team: e.target.value })}
-                placeholder="Engineering"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="avatar-url">Avatar URL</Label>
-              <Input
-                id="avatar-url"
-                value={formData.avatar_url || ''}
-                onChange={(e) => setFormData({ ...formData, avatar_url: e.target.value })}
-                placeholder="https://example.com/avatar.jpg"
-              />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="phone_number">Phone Number</Label>
+                <Input
+                  id="phone_number"
+                  value={editFormData.phone_number || ''}
+                  onChange={(e) => setEditFormData({ ...editFormData, phone_number: e.target.value })}
+                  placeholder="+1 (555) 123-4567"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  value={editFormData.location || ''}
+                  onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
+                  placeholder="City, Country"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="department">Department</Label>
+                <Input
+                  id="department"
+                  value={editFormData.department || ''}
+                  onChange={(e) => setEditFormData({ ...editFormData, department: e.target.value })}
+                  placeholder="Engineering"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="position">Position</Label>
+                <Input
+                  id="position"
+                  value={editFormData.position || ''}
+                  onChange={(e) => setEditFormData({ ...editFormData, position: e.target.value })}
+                  placeholder="Software Engineer"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="linkedin_url">LinkedIn URL</Label>
+                <Input
+                  id="linkedin_url"
+                  value={editFormData.linkedin_url || ''}
+                  onChange={(e) => setEditFormData({ ...editFormData, linkedin_url: e.target.value })}
+                  placeholder="https://linkedin.com/in/username"
+                  className="mt-1"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="twitter_handle">Twitter Handle</Label>
+                <Input
+                  id="twitter_handle"
+                  value={editFormData.twitter_handle || ''}
+                  onChange={(e) => setEditFormData({ ...editFormData, twitter_handle: e.target.value })}
+                  placeholder="@username"
+                  className="mt-1"
+                />
+              </div>
             </div>
           </div>
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+            <Button variant="outline" onClick={handleCloseModal}>
+              <X className="h-4 w-4 mr-2" />
               Cancel
             </Button>
-            <Button onClick={handleUpdate}>Update Profile</Button>
+            <Button onClick={handleSaveEdit}>
+              <Save className="h-4 w-4 mr-2" />
+              Save Changes
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

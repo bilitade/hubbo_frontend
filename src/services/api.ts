@@ -331,6 +331,25 @@ class ApiClient {
     return response.data;
   }
 
+  async enhanceIdea(data: {
+    title: string;
+    description?: string;
+    possible_outcome?: string;
+    departments?: string[];
+    category?: string;
+  }): Promise<{
+    success: boolean;
+    enhanced_data: {
+      title?: string;
+      description?: string;
+      possible_outcome?: string;
+    };
+    raw_response: string;
+  }> {
+    const response = await this.client.post('/api/v1/ai/enhance/enhance-idea', data);
+    return response.data;
+  }
+
   // File Storage
   async uploadFile(file: File, category = 'general', index = true): Promise<FileUploadResponse> {
     const formData = new FormData();
@@ -380,6 +399,11 @@ class ApiClient {
     const response = await this.client.get<ProfileResponse[]>('/api/v1/profiles/', {
       params: { skip, limit },
     });
+    return response.data;
+  }
+
+  async getMyProfile(): Promise<ProfileResponse> {
+    const response = await this.client.get<ProfileResponse>('/api/v1/profiles/me');
     return response.data;
   }
 
