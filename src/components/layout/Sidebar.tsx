@@ -28,7 +28,7 @@ const navigation = [
   { name: 'Tasks', href: '/tasks', icon: CheckSquare },
   { name: 'Experiments', href: '/experiments', icon: FlaskConical },
   { name: 'Users', href: '/users', icon: Users },
-  { name: 'Profiles', href: '/profiles', icon: UserCircle },
+  { name: 'My Profile', href: '/profiles', icon: UserCircle },
   { name: 'Roles', href: '/roles', icon: Shield },
   { name: 'Permissions', href: '/permissions', icon: Key },
   { name: 'AI Assistant', href: '/ai', icon: Bot },

@@ -1,4 +1,4 @@
-import { Moon, Sun, User, LogOut, Menu } from 'lucide-react';
+import { Moon, Sun, User, LogOut, Menu, Rocket } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../ui/button';
@@ -32,8 +32,13 @@ export function Header({ onMenuClick }: HeaderProps) {
         </div>
         
         <div className="mr-4 flex">
-          <a href="/" className="mr-6 flex items-center space-x-2">
-            <span className="font-bold text-xl">RBAC</span>
+          <a href="/" className="mr-6 flex items-center space-x-2 group">
+            <div className="bg-primary p-1.5 rounded-lg group-hover:scale-110 transition-transform">
+              <Rocket className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <span className="font-bold text-xl bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Hubbo
+            </span>
           </a>
         </div>
 
