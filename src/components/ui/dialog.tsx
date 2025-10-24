@@ -1,5 +1,4 @@
 import * as React from "react"
-import { X } from "lucide-react"
 import { cn } from "../../lib/utils"
 
 interface DialogProps {
@@ -12,12 +11,12 @@ const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div 
         className="fixed inset-0 bg-background/80 backdrop-blur-sm"
         onClick={() => onOpenChange?.(false)}
       />
-      <div className="relative z-50 w-full max-w-lg">
+      <div className="relative z-50 w-full flex items-center justify-center">
         {children}
       </div>
     </div>
@@ -31,7 +30,7 @@ const DialogContent = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "relative bg-background border rounded-lg shadow-lg p-6 mx-4",
+      "relative bg-background border rounded-lg shadow-lg",
       className
     )}
     {...props}

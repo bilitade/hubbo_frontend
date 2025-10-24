@@ -69,7 +69,7 @@ export function UsersPage() {
     fetchRoles();
   }, []);
 
-  const handleApprove = async (userId: number) => {
+  const handleApprove = async (userId: string) => {
     try {
       await apiClient.approveUser(userId);
       fetchUsers();
@@ -78,7 +78,7 @@ export function UsersPage() {
     }
   };
 
-  const handleDelete = async (userId: number) => {
+  const handleDelete = async (userId: string) => {
     if (!confirm('Are you sure you want to delete this user?')) return;
     
     try {
@@ -87,15 +87,6 @@ export function UsersPage() {
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Failed to delete user');
     }
-  };
-
-  const handleRoleToggle = (roleName: string) => {
-    setFormData(prev => ({
-      ...prev,
-      selectedRoles: prev.selectedRoles.includes(roleName)
-        ? prev.selectedRoles.filter(r => r !== roleName)
-        : [...prev.selectedRoles, roleName]
-    }));
   };
 
   const handleCreate = async (e: React.FormEvent) => {
