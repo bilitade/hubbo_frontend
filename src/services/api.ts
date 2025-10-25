@@ -269,12 +269,12 @@ class ApiClient {
     return response.data;
   }
 
-  async updateRole(roleId: number, data: RoleUpdate): Promise<RoleResponse> {
+  async updateRole(roleId: string | number, data: RoleUpdate): Promise<RoleResponse> {
     const response = await this.client.patch<RoleResponse>(`/api/v1/roles/${roleId}`, data);
     return response.data;
   }
 
-  async deleteRole(roleId: number): Promise<void> {
+  async deleteRole(roleId: string | number): Promise<void> {
     await this.client.delete(`/api/v1/roles/${roleId}`);
   }
 
@@ -296,7 +296,7 @@ class ApiClient {
     return response.data;
   }
 
-  async deletePermission(permissionId: number): Promise<void> {
+  async deletePermission(permissionId: string | number): Promise<void> {
     await this.client.delete(`/api/v1/permissions/${permissionId}`);
   }
 

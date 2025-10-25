@@ -11,7 +11,6 @@ import {
   X, 
   User, 
   Calendar, 
-  MessageSquare, 
   Send,
   Check,
   Circle,
@@ -23,7 +22,7 @@ import {
   Plus
 } from 'lucide-react';
 import { apiClient } from '../../services/api';
-import type { TaskDetailResponse, TaskActivityResponse, TaskCommentResponse, UserResponse } from '../../types/api';
+import type { TaskDetailResponse, TaskActivityResponse, UserResponse } from '../../types/api';
 
 interface TaskDetailModalProps {
   taskId: string | null;

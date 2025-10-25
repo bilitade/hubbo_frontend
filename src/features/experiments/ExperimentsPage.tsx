@@ -6,7 +6,8 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { apiClient } from '../../services/api';
-import type { ExperimentResponse, ExperimentCreate, ExperimentUpdate } from '../../types/api';
+import type { ExperimentResponse } from '../../types/api';
+import { CreateExperimentModal, EditExperimentModal } from '../../components/modals';
 
 export function ExperimentsPage() {
   const [experiments, setExperiments] = useState<ExperimentResponse[]>([]);
@@ -16,13 +17,6 @@ export function ExperimentsPage() {
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedExperiment, setSelectedExperiment] = useState<ExperimentResponse | null>(null);
   const [newUpdate, setNewUpdate] = useState('');
-  const [formData, setFormData] = useState<ExperimentCreate>({
-    title: '',
-    hypothesis: '',
-    method: '',
-    success_criteria: '',
-    progress_updates: [],
-  });
 
   useEffect(() => {
     loadExperiments();
@@ -40,33 +34,30 @@ export function ExperimentsPage() {
     }
   };
 
-  const handleCreate = async () => {
+  const handleCreate = async (data: {
+    title: string;
+    hypothesis: string;
+    method: string;
+    success_criteria: string;
+  }) => {
     try {
-      await apiClient.createExperiment(formData);
+      await apiClient.createExperiment(data);
       setShowCreateDialog(false);
-      setFormData({
-        title: '',
-        hypothesis: '',
-        method: '',
-        success_criteria: '',
-        progress_updates: [],
-      });
       loadExperiments();
     } catch (error) {
       console.error('Failed to create experiment:', error);
     }
   };
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (data: {
+    title: string;
+    hypothesis: string;
+    method: string;
+    success_criteria: string;
+  }) => {
     if (!selectedExperiment) return;
     try {
-      const updateData: ExperimentUpdate = {
-        title: formData.title,
-        hypothesis: formData.hypothesis,
-        method: formData.method,
-        success_criteria: formData.success_criteria,
-      };
-      await apiClient.updateExperiment(selectedExperiment.id, updateData);
+      await apiClient.updateExperiment(selectedExperiment.id, data);
       setShowEditDialog(false);
       setSelectedExperiment(null);
       loadExperiments();
@@ -101,13 +92,6 @@ export function ExperimentsPage() {
 
   const openEditDialog = (experiment: ExperimentResponse) => {
     setSelectedExperiment(experiment);
-    setFormData({
-      title: experiment.title,
-      hypothesis: experiment.hypothesis,
-      method: experiment.method,
-      success_criteria: experiment.success_criteria,
-      progress_updates: experiment.progress_updates,
-    });
     setShowEditDialog(true);
   };
 
@@ -189,115 +173,19 @@ export function ExperimentsPage() {
         ))}
       </div>
 
-      {/* Create Dialog */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create New Experiment</DialogTitle>
-            <DialogDescription>Add a new experiment to track</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="title">Title *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Enter experiment title"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="hypothesis">Hypothesis *</Label>
-              <textarea
-                id="hypothesis"
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                value={formData.hypothesis}
-                onChange={(e) => setFormData({ ...formData, hypothesis: e.target.value })}
-                placeholder="What is your hypothesis?"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="method">Method *</Label>
-              <textarea
-                id="method"
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                value={formData.method}
-                onChange={(e) => setFormData({ ...formData, method: e.target.value })}
-                placeholder="How will you test this?"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="success-criteria">Success Criteria *</Label>
-              <textarea
-                id="success-criteria"
-                className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                value={formData.success_criteria}
-                onChange={(e) => setFormData({ ...formData, success_criteria: e.target.value })}
-                placeholder="How will you measure success?"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreate}>Create Experiment</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Modals */}
+      <CreateExperimentModal
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onSubmit={handleCreate}
+      />
 
-      {/* Edit Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Experiment</DialogTitle>
-            <DialogDescription>Update experiment details</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="edit-title">Title *</Label>
-              <Input
-                id="edit-title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-hypothesis">Hypothesis *</Label>
-              <textarea
-                id="edit-hypothesis"
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                value={formData.hypothesis}
-                onChange={(e) => setFormData({ ...formData, hypothesis: e.target.value })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-method">Method *</Label>
-              <textarea
-                id="edit-method"
-                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                value={formData.method}
-                onChange={(e) => setFormData({ ...formData, method: e.target.value })}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-success-criteria">Success Criteria *</Label>
-              <textarea
-                id="edit-success-criteria"
-                className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                value={formData.success_criteria}
-                onChange={(e) => setFormData({ ...formData, success_criteria: e.target.value })}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleUpdate}>Update Experiment</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditExperimentModal
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onSubmit={handleUpdate}
+        experiment={selectedExperiment}
+      />
 
       {/* Detail Dialog */}
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>

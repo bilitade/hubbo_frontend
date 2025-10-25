@@ -19,7 +19,7 @@ export interface UserResponse {
   role_title?: string | null;
   is_active: boolean;
   is_approved: boolean;
-  roles?: RoleResponse[];
+  roles: RoleResponse[];
 }
 
 export interface UserRegister {
@@ -46,28 +46,32 @@ export interface UserProfileUpdate {
 
 export interface UserAdminUpdate extends UserProfileUpdate {
   role_names?: string[] | null;
+  role_ids?: string[] | null;
   is_active?: boolean | null;
   is_approved?: boolean | null;
 }
 
 export interface RoleResponse {
-  id: number;
+  id: string;
   name: string;
-  permissions?: PermissionResponse[];
+  description?: string;
+  permissions: PermissionResponse[];
 }
 
 export interface RoleCreate {
   name: string;
+  description?: string;
   permission_names?: string[];
 }
 
 export interface RoleUpdate {
-  name?: string | null;
-  permission_names?: string[] | null;
+  name?: string;
+  description?: string;
+  permission_names?: string[];
 }
 
 export interface PermissionResponse {
-  id: number;
+  id: string;
   name: string;
 }
 

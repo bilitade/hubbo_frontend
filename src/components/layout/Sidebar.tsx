@@ -15,6 +15,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { Button } from '../ui/button';
+import { usePermissions } from '../../hooks/usePermissions';
 
 interface SidebarProps {
   open: boolean;
@@ -23,21 +24,114 @@ interface SidebarProps {
   onToggleCollapse?: () => void;
 }
 
-const navItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Workflow', exact: true },
-  { to: '/dashboard/ideas', icon: Lightbulb, label: 'Ideas', exact: false },
-  { to: '/dashboard/projects', icon: FolderKanban, label: 'Projects', exact: false },
-  { to: '/dashboard/tasks', icon: CheckSquare, label: 'Tasks', exact: false },
-  { to: '/dashboard/experiments', icon: FlaskConical, label: 'Experiments', exact: false },
-  { to: '/dashboard/users', icon: Users, label: 'Users', exact: false },
-  { to: '/dashboard/profiles', icon: UserCircle, label: 'Profiles', exact: false },
-  { to: '/dashboard/roles', icon: Shield, label: 'Roles', exact: false },
-  { to: '/dashboard/permissions', icon: Key, label: 'Permissions', exact: false },
-  { to: '/dashboard/ai', icon: Brain, label: 'AI Assistant', exact: false },
-  { to: '/dashboard/files', icon: FileText, label: 'Files', exact: false },
+interface NavItem {
+  to: string;
+  icon: any;
+  label: string;
+  exact: boolean;
+  permission?: string;
+  permissions?: string[];
+}
+
+const navItems: NavItem[] = [
+  { 
+    to: '/dashboard', 
+    icon: LayoutDashboard, 
+    label: 'Workflow', 
+    exact: true,
+    // Everyone can see workflow
+  },
+  { 
+    to: '/dashboard/ideas', 
+    icon: Lightbulb, 
+    label: 'Ideas', 
+    exact: false,
+    permission: 'ideas:view',
+  },
+  { 
+    to: '/dashboard/projects', 
+    icon: FolderKanban, 
+    label: 'Projects', 
+    exact: false,
+    permission: 'projects:view',
+  },
+  { 
+    to: '/dashboard/tasks', 
+    icon: CheckSquare, 
+    label: 'Tasks', 
+    exact: false,
+    permission: 'tasks:view',
+  },
+  { 
+    to: '/dashboard/experiments', 
+    icon: FlaskConical, 
+    label: 'Experiments', 
+    exact: false,
+    permission: 'experiments:view',
+  },
+  { 
+    to: '/dashboard/users', 
+    icon: Users, 
+    label: 'Users', 
+    exact: false,
+    permission: 'users:view',
+  },
+  { 
+    to: '/dashboard/profiles', 
+    icon: UserCircle, 
+    label: 'Profiles', 
+    exact: false,
+    permission: 'profiles:view',
+  },
+  { 
+    to: '/dashboard/roles', 
+    icon: Shield, 
+    label: 'Roles', 
+    exact: false,
+    permission: 'roles:view',
+  },
+  { 
+    to: '/dashboard/permissions', 
+    icon: Key, 
+    label: 'Permissions', 
+    exact: false,
+    permission: 'permissions:view',
+  },
+  { 
+    to: '/dashboard/ai', 
+    icon: Brain, 
+    label: 'AI Assistant', 
+    exact: false,
+    permission: 'ai:use',
+  },
+  { 
+    to: '/dashboard/files', 
+    icon: FileText, 
+    label: 'Files', 
+    exact: false,
+    permission: 'files:view',
+  },
 ];
 
 export function Sidebar({ open, onClose, collapsed = false, onToggleCollapse }: SidebarProps) {
+  const { hasPermission, hasAnyPermission, isAdmin } = usePermissions();
+
+  // Filter nav items based on permissions
+  const visibleNavItems = navItems.filter(item => {
+    // Admin can see everything
+    if (isAdmin) return true;
+    
+    // No permission required - visible to all
+    if (!item.permission && !item.permissions) return true;
+    
+    // Check single permission
+    if (item.permission && !hasPermission(item.permission)) return false;
+    
+    // Check multiple permissions (any)
+    if (item.permissions && !hasAnyPermission(item.permissions)) return false;
+    
+    return true;
+  });
   return (
     <>
       {/* Mobile Overlay */}
@@ -79,7 +173,7 @@ export function Sidebar({ open, onClose, collapsed = false, onToggleCollapse }: 
 
           {/* Navigation Items */}
           <nav className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const Icon = item.icon;
               return (
                 <NavLink

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Brain, CheckCircle, Droplets, Lightbulb, Target, TrendingUp, Zap, Building2, Shield, Clock, BarChart3, Sparkles } from 'lucide-react';
+import { ArrowRight, Brain, CheckCircle, Droplets, Lightbulb, Target, TrendingUp, Zap, Shield, BarChart3, Sparkles } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 
 export function LandingPage() {

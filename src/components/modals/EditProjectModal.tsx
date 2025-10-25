@@ -5,7 +5,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Save, X, Edit, Archive, Trash2, FolderKanban, CheckSquare, Clock, User, Calendar, BarChart3 } from 'lucide-react';
+import { Save, Edit, Archive, Trash2, FolderKanban, CheckSquare, Clock, User, Calendar, BarChart3 } from 'lucide-react';
 import { apiClient } from '../../services/api';
 import type { ProjectResponse, ProjectUpdate, TaskResponse, UserResponse } from '../../types/api';
 

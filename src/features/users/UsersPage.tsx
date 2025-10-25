@@ -1,51 +1,48 @@
 import { useState, useEffect } from 'react';
 import { apiClient } from '../../services/api';
 import type { UserResponse, RoleResponse } from '../../types/api';
-import { Card, CardContent } from '../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Checkbox } from '../../components/ui/checkbox';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog';
-import { CheckCircle, XCircle, Trash2, UserCheck, Plus, Edit, Search } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../components/ui/dialog';
+import { Alert } from '../../components/ui/alert';
+import { 
+  Trash2, 
+  UserCheck, 
+  Plus, 
+  Edit, 
+  Search,
+  Shield,
+  AlertCircle,
+  Eye,
+  EyeOff
+} from 'lucide-react';
+import { PermissionGuard } from '../../components/guards/PermissionGuard';
+import { CreateUserModal, EditUserModal, ManageUserRolesModal } from '../../components/modals';
 
 export function UsersPage() {
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [roles, setRoles] = useState<RoleResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [updating, setUpdating] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Modal states
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [roleDialogOpen, setRoleDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserResponse | null>(null);
 
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    first_name: '',
-    middle_name: '',
-    last_name: '',
-    role_title: '',
-    selectedRoles: [] as string[],
-  });
-
-  const [editFormData, setEditFormData] = useState({
-    first_name: '',
-    middle_name: '',
-    last_name: '',
-    role_title: '',
-    email: '',
-    is_active: true,
-    is_approved: true,
-    selectedRoles: [] as string[],
-  });
+  // Form states
+  const [creating, setCreating] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      setError('');
       const data = await apiClient.listUsers();
       setUsers(data);
     } catch (err: any) {
@@ -69,98 +66,75 @@ export function UsersPage() {
     fetchRoles();
   }, []);
 
-  const handleApprove = async (userId: string) => {
-    try {
-      await apiClient.approveUser(userId);
-      fetchUsers();
-    } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to approve user');
-    }
-  };
+  // Filter users based on search
+  const filteredUsers = users.filter(user => {
+    const query = searchQuery.toLowerCase();
+    return (
+      user.email.toLowerCase().includes(query) ||
+      user.first_name.toLowerCase().includes(query) ||
+      user.last_name.toLowerCase().includes(query) ||
+      (user.middle_name?.toLowerCase().includes(query))
+    );
+  });
 
-  const handleDelete = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
-    
-    try {
-      await apiClient.deleteUser(userId);
-      fetchUsers();
-    } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to delete user');
-    }
-  };
+  // ========== CRUD Operations ==========
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreateUser = async (data: {
+    email: string;
+    password: string;
+    first_name: string;
+    middle_name: string;
+    last_name: string;
+    role_title?: string | null;
+  }) => {
     setCreating(true);
-
     try {
-      await apiClient.createUser({
-        email: formData.email,
-        password: formData.password,
-        first_name: formData.first_name,
-        middle_name: formData.middle_name,
-        last_name: formData.last_name,
-        role_title: formData.role_title || undefined,
-        role_names: formData.selectedRoles.length > 0 ? formData.selectedRoles : undefined,
-      });
-      setDialogOpen(false);
-      setFormData({
-        email: '',
-        password: '',
-        first_name: '',
-        middle_name: '',
-        last_name: '',
-        role_title: '',
-        selectedRoles: [],
-      });
+      const payload = {
+        email: data.email,
+        password: data.password,
+        first_name: data.first_name,
+        middle_name: data.middle_name,
+        last_name: data.last_name,
+        role_title: data.role_title || null,
+      };
+      console.log('Creating user with payload:', payload);
+      await apiClient.createUser(payload);
+      setCreateDialogOpen(false);
       fetchUsers();
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to create user');
+      console.error('Create user error:', err.response?.data);
+      console.error('Full error:', err);
+      
+      // Show detailed validation errors
+      if (err.response?.data?.detail && Array.isArray(err.response.data.detail)) {
+        const errors = err.response.data.detail.map((e: any) => 
+          `${e.loc.join('.')}: ${e.msg}`
+        ).join('\n');
+        alert(`Validation errors:\n${errors}`);
+      } else {
+        alert(err.response?.data?.detail || 'Failed to create user');
+      }
     } finally {
       setCreating(false);
     }
   };
 
-  const handleEdit = (user: UserResponse) => {
-    setSelectedUser(user);
-    setEditFormData({
-      first_name: user.first_name,
-      middle_name: user.middle_name,
-      last_name: user.last_name,
-      role_title: user.role_title || '',
-      email: user.email,
-      is_active: user.is_active,
-      is_approved: user.is_approved,
-      selectedRoles: user.roles?.map(r => r.name) || [],
-    });
-    setEditDialogOpen(true);
-  };
-
-  const handleEditRoleToggle = (roleName: string) => {
-    setEditFormData(prev => ({
-      ...prev,
-      selectedRoles: prev.selectedRoles.includes(roleName)
-        ? prev.selectedRoles.filter(r => r !== roleName)
-        : [...prev.selectedRoles, roleName]
-    }));
-  };
-
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleEditUser = async (data: {
+    first_name: string;
+    middle_name: string;
+    last_name: string;
+    email: string;
+    role_title?: string | null;
+  }) => {
     if (!selectedUser) return;
-    
     setUpdating(true);
-
     try {
       await apiClient.updateUser(selectedUser.id, {
-        first_name: editFormData.first_name,
-        middle_name: editFormData.middle_name,
-        last_name: editFormData.last_name,
-        role_title: editFormData.role_title || null,
-        email: editFormData.email,
-        is_active: editFormData.is_active,
-        is_approved: editFormData.is_approved,
-        role_names: editFormData.selectedRoles,
+        first_name: data.first_name,
+        middle_name: data.middle_name,
+        last_name: data.last_name,
+        email: data.email,
+        role_title: data.role_title,
       });
       setEditDialogOpen(false);
       setSelectedUser(null);
@@ -172,396 +146,306 @@ export function UsersPage() {
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      user.first_name.toLowerCase().includes(query) ||
-      user.middle_name.toLowerCase().includes(query) ||
-      user.last_name.toLowerCase().includes(query) ||
-      user.email.toLowerCase().includes(query) ||
-      (user.role_title && user.role_title.toLowerCase().includes(query)) ||
-      user.id.toString().includes(query)
-    );
-  });
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return;
+
+    try {
+      await apiClient.deleteUser(selectedUser.id);
+      setDeleteDialogOpen(false);
+      setSelectedUser(null);
+      fetchUsers();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to delete user');
+    }
+  };
+
+  const handleApproveUser = async (userId: string) => {
+    try {
+      await apiClient.approveUser(userId);
+      fetchUsers();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to approve user');
+    }
+  };
+
+  const handleDisableUser = async (userId: string, currentStatus: boolean) => {
+    try {
+      await apiClient.updateUser(userId, { is_active: !currentStatus });
+      fetchUsers();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to update user status');
+    }
+  };
+
+  const handleManageRoles = async (selectedRoles: string[]) => {
+    if (!selectedUser) return;
+    setUpdating(true);
+    try {
+      await apiClient.updateUser(selectedUser.id, {
+        role_ids: selectedRoles,
+      });
+      setRoleDialogOpen(false);
+      setSelectedUser(null);
+      fetchUsers();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to update roles');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  // ========== Dialog Handlers ==========
+
+  const openEditDialog = (user: UserResponse) => {
+    setSelectedUser(user);
+    setEditDialogOpen(true);
+  };
+
+  const openRoleDialog = (user: UserResponse) => {
+    setSelectedUser(user);
+    setRoleDialogOpen(true);
+  };
+
+  const openDeleteDialog = (user: UserResponse) => {
+    setSelectedUser(user);
+    setDeleteDialogOpen(true);
+  };
+
+  // ========== UI Helpers ==========
+
+  const getUserStatusBadge = (user: UserResponse) => {
+    if (!user.is_active) {
+      return <Badge variant="destructive">Disabled</Badge>;
+    }
+    if (!user.is_approved) {
+      return <Badge className="bg-amber-500 hover:bg-amber-600">Pending</Badge>;
+    }
+    return <Badge className="bg-emerald-500 hover:bg-emerald-600">Active</Badge>;
+  };
 
   if (loading) {
-    return <div className="text-center py-8">Loading users...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center py-8 text-destructive">{error}</div>;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+          <p className="mt-2 text-sm text-muted-foreground">Loading users...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Users</h1>
-          <p className="text-muted-foreground">
-            Manage user accounts and permissions
+          <h1 className="text-3xl font-bold text-foreground">User Management</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage users, roles, and permissions
           </p>
         </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+        <PermissionGuard permission="users:create">
+          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
           Add User
         </Button>
+        </PermissionGuard>
       </div>
 
+      {/* Error Alert */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <span>{error}</span>
+        </Alert>
+      )}
+
+      {/* Search Bar */}
+      <Card>
+        <CardContent className="pt-6">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search users by name, email, role, or ID..."
+              placeholder="Search users by name or email..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10"
         />
       </div>
+        </CardContent>
+      </Card>
 
+      {/* Users Table */}
       <Card>
-        <CardContent className="p-0">
+        <CardHeader>
+          <CardTitle>All Users ({filteredUsers.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-4 font-semibold text-sm">Name</th>
+                  <th className="text-left py-3 px-4 font-semibold text-sm">Email</th>
+                  <th className="text-left py-3 px-4 font-semibold text-sm">Roles</th>
+                  <th className="text-left py-3 px-4 font-semibold text-sm">Status</th>
+                  <th className="text-right py-3 px-4 font-semibold text-sm">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
           {filteredUsers.length === 0 ? (
-            <div className="py-12 text-center text-muted-foreground">
-              {searchQuery ? 'No users match your search' : 'No users found'}
-            </div>
-          ) : (
-            <div className="divide-y">
-              {filteredUsers.map((user) => (
-                <div
-                  key={user.id}
-                  className="flex items-start gap-3 sm:gap-4 p-4 sm:p-6 hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex-shrink-0">
-                    <div className="text-xs sm:text-sm font-semibold text-primary">
-                      {user.first_name[0]}{user.last_name[0]}
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 sm:gap-2 mb-1 flex-wrap">
-                      <h3 className="font-semibold text-sm sm:text-base">
-                        {user.first_name} {user.middle_name} {user.last_name}
-                      </h3>
-                      <Badge variant="secondary" className="text-xs">ID: {user.id}</Badge>
-                      {user.is_active ? (
-                        <Badge variant="default" className="text-xs">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Active
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="text-xs">
-                          <XCircle className="h-3 w-3 mr-1" />
-                          Inactive
-                        </Badge>
-                      )}
-                      {user.is_approved ? (
-                        <Badge variant="default" className="text-xs">Approved</Badge>
-                      ) : (
-                        <Badge variant="destructive" className="text-xs">Pending</Badge>
-                      )}
-                    </div>
-                    <div className="text-xs sm:text-sm text-muted-foreground mb-1 break-all">{user.email}</div>
+                  <tr>
+                    <td colSpan={5} className="text-center py-8 text-muted-foreground">
+                      No users found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredUsers.map((user) => (
+                    <tr key={user.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                      <td className="py-3 px-4">
+                        <div className="font-medium">{user.first_name} {user.last_name}</div>
                     {user.role_title && (
-                      <div className="text-xs sm:text-sm text-muted-foreground mb-2">
-                        Role: {user.role_title}
-                      </div>
-                    )}
-                    {user.roles && user.roles.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-2">
+                          <div className="text-xs text-muted-foreground">{user.role_title}</div>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-muted-foreground">{user.email}</td>
+                      <td className="py-3 px-4">
+                        <div className="flex gap-1 flex-wrap">
                         {user.roles.map((role) => (
                           <Badge key={role.id} variant="outline" className="text-xs">
                             {role.name}
                           </Badge>
                         ))}
                       </div>
-                    )}
-                  </div>
-                  <div className="flex gap-1.5 sm:gap-2 flex-shrink-0">
+                      </td>
+                      <td className="py-3 px-4">{getUserStatusBadge(user)}</td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center justify-end gap-2">
+                          {/* Approve Button */}
+                          <PermissionGuard permission="users:approve">
                     {!user.is_approved && (
                       <Button
+                                variant="ghost"
                         size="sm"
-                        onClick={() => handleApprove(user.id)}
-                        className="h-9 w-9 sm:h-10 sm:w-10 p-0"
+                                onClick={() => handleApproveUser(user.id)}
+                                className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                                title="Approve User"
                       >
                         <UserCheck className="h-4 w-4" />
                       </Button>
                     )}
+                          </PermissionGuard>
+
+                          {/* Disable/Enable Button */}
+                          <PermissionGuard permission="users:disable">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDisableUser(user.id, user.is_active)}
+                              className={user.is_active 
+                                ? "text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950"
+                                : "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                              }
+                              title={user.is_active ? 'Disable User' : 'Enable User'}
+                            >
+                              {user.is_active ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                          </PermissionGuard>
+
+                          {/* Manage Roles Button */}
+                          <PermissionGuard permission="users:manage_roles">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openRoleDialog(user)}
+                              className="text-primary hover:text-primary/80 hover:bg-primary/10"
+                              title="Manage Roles"
+                            >
+                              <Shield className="h-4 w-4" />
+                            </Button>
+                          </PermissionGuard>
+
+                          {/* Edit Button */}
+                          <PermissionGuard permission="users:edit">
                     <Button
+                              variant="ghost"
                       size="sm"
-                      variant="outline"
-                      onClick={() => handleEdit(user)}
-                      className="h-9 w-9 sm:h-10 sm:w-10 p-0"
+                              onClick={() => openEditDialog(user)}
+                              className="text-primary hover:text-primary/80 hover:bg-primary/10"
+                              title="Edit User"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
+                          </PermissionGuard>
+
+                          {/* Delete Button */}
+                          <PermissionGuard permission="users:delete">
                     <Button
+                              variant="ghost"
                       size="sm"
-                      variant="destructive"
-                      onClick={() => handleDelete(user.id)}
-                      className="h-9 w-9 sm:h-10 sm:w-10 p-0"
+                              onClick={() => openDeleteDialog(user)}
+                              className="text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+                              title="Delete User"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
+                          </PermissionGuard>
                   </div>
-                </div>
-              ))}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
             </div>
-          )}
         </CardContent>
       </Card>
 
-      <div className="text-sm text-muted-foreground">
-        {searchQuery ? (
-          <>Showing {filteredUsers.length} of {users.length} user{users.length !== 1 ? 's' : ''}</>
-        ) : (
-          <>Total: {users.length} user{users.length !== 1 ? 's' : ''}</>
-        )}
-      </div>
+      {/* Modals */}
+      <CreateUserModal
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSubmit={handleCreateUser}
+        creating={creating}
+      />
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+      <EditUserModal
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSubmit={handleEditUser}
+        user={selectedUser}
+        updating={updating}
+      />
+
+      <ManageUserRolesModal
+        open={roleDialogOpen}
+        onOpenChange={setRoleDialogOpen}
+        onSubmit={handleManageRoles}
+        user={selectedUser}
+        roles={roles}
+        updating={updating}
+      />
+
+      {/* ========== DELETE CONFIRMATION MODAL ========== */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Add New User</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Delete User
+            </DialogTitle>
             <DialogDescription>
-              Create a new user account
+              Are you sure you want to delete {selectedUser?.first_name} {selectedUser?.last_name}? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-
-          <form onSubmit={handleCreate} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="first_name">First Name *</Label>
-                <Input
-                  id="first_name"
-                  value={formData.first_name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
-                  required
-                  disabled={creating}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="middle_name">Middle Name *</Label>
-                <Input
-                  id="middle_name"
-                  value={formData.middle_name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, middle_name: e.target.value }))}
-                  required
-                  disabled={creating}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="last_name">Last Name *</Label>
-              <Input
-                id="last_name"
-                value={formData.last_name}
-                onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
-                required
-                disabled={creating}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="role_title">Role Title</Label>
-              <Input
-                id="role_title"
-                placeholder="e.g., Software Engineer"
-                value={formData.role_title}
-                onChange={(e) => setFormData(prev => ({ ...prev, role_title: e.target.value }))}
-                disabled={creating}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="user@example.com"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                required
-                disabled={creating}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password *</Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                required
-                disabled={creating}
-              />
-              <p className="text-xs text-muted-foreground">
-                Min 8 chars, include uppercase, lowercase, and digit
-              </p>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setDialogOpen(false)}
-                disabled={creating}
-              >
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setDeleteDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={creating}>
-                {creating ? 'Creating...' : 'Add User'}
+            <Button type="button" variant="destructive" onClick={handleDeleteUser}>
+              Delete User
               </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>
-              Update user information and manage roles
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleUpdate} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit_first_name">First Name *</Label>
-                <Input
-                  id="edit_first_name"
-                  value={editFormData.first_name}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, first_name: e.target.value }))}
-                  required
-                  disabled={updating}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit_middle_name">Middle Name *</Label>
-                <Input
-                  id="edit_middle_name"
-                  value={editFormData.middle_name}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, middle_name: e.target.value }))}
-                  required
-                  disabled={updating}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit_last_name">Last Name *</Label>
-              <Input
-                id="edit_last_name"
-                value={editFormData.last_name}
-                onChange={(e) => setEditFormData(prev => ({ ...prev, last_name: e.target.value }))}
-                required
-                disabled={updating}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit_role_title">Role Title</Label>
-              <Input
-                id="edit_role_title"
-                placeholder="e.g., Software Engineer"
-                value={editFormData.role_title}
-                onChange={(e) => setEditFormData(prev => ({ ...prev, role_title: e.target.value }))}
-                disabled={updating}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit_email">Email *</Label>
-              <Input
-                id="edit_email"
-                type="email"
-                placeholder="user@example.com"
-                value={editFormData.email}
-                onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
-                required
-                disabled={updating}
-              />
-            </div>
-
-            <div className="space-y-3">
-              <Label>User Status</Label>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="edit_is_active"
-                    checked={editFormData.is_active}
-                    onClick={() => setEditFormData(prev => ({ ...prev, is_active: !prev.is_active }))}
-                    disabled={updating}
-                  />
-                  <label
-                    htmlFor="edit_is_active"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                  >
-                    Active (User can login)
-                  </label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="edit_is_approved"
-                    checked={editFormData.is_approved}
-                    onClick={() => setEditFormData(prev => ({ ...prev, is_approved: !prev.is_approved }))}
-                    disabled={updating}
-                  />
-                  <label
-                    htmlFor="edit_is_approved"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                  >
-                    Approved
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Assign Roles</Label>
-              <div className="max-h-40 overflow-y-auto border rounded-md p-4 space-y-2">
-                {roles.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No roles available</p>
-                ) : (
-                  roles.map((role) => (
-                    <div key={role.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`edit-role-${role.id}`}
-                        checked={editFormData.selectedRoles.includes(role.name)}
-                        onClick={() => handleEditRoleToggle(role.name)}
-                        disabled={updating}
-                      />
-                      <label
-                        htmlFor={`edit-role-${role.id}`}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                      >
-                        {role.name}
-                      </label>
-                    </div>
-                  ))
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {editFormData.selectedRoles.length} role(s) selected
-              </p>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setEditDialogOpen(false)}
-                disabled={updating}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={updating}>
-                {updating ? 'Updating...' : 'Update User'}
-              </Button>
-            </div>
-          </form>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

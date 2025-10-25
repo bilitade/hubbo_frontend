@@ -6,7 +6,8 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../components/ui/card';
 import { Alert, AlertDescription } from '../../components/ui/alert';
-import { Droplets, ArrowLeft, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import { Droplets, ArrowLeft, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
+import { validatePassword, validateEmail, validateName, getPasswordStrength } from '../../utils/validation';
 
 export function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -20,18 +21,71 @@ export function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
+
+  // Real-time password strength indicator
+  const passwordStrength = formData.password ? getPasswordStrength(formData.password) : null;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
     }));
+    // Clear field error when user starts typing
+    if (fieldErrors[e.target.name]) {
+      setFieldErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[e.target.name];
+        return newErrors;
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({});
+    
+    const validationErrors: Record<string, string> = {};
+
+    // Validate first name
+    const firstNameValidation = validateName(formData.first_name, 'First name');
+    if (!firstNameValidation.isValid) {
+      validationErrors.first_name = firstNameValidation.error!;
+    }
+
+    // Validate middle name
+    const middleNameValidation = validateName(formData.middle_name, 'Middle name');
+    if (!middleNameValidation.isValid) {
+      validationErrors.middle_name = middleNameValidation.error!;
+    }
+
+    // Validate last name
+    const lastNameValidation = validateName(formData.last_name, 'Last name');
+    if (!lastNameValidation.isValid) {
+      validationErrors.last_name = lastNameValidation.error!;
+    }
+
+    // Validate email
+    const emailValidation = validateEmail(formData.email);
+    if (!emailValidation.isValid) {
+      validationErrors.email = emailValidation.error!;
+    }
+
+    // Validate password
+    const passwordValidation = validatePassword(formData.password);
+    if (!passwordValidation.isValid) {
+      validationErrors.password = passwordValidation.error!;
+    }
+
+    // Show errors if any
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors);
+      setError('Please fix the validation errors below');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -96,7 +150,7 @@ export function RegisterPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="first_name" className="text-sm font-medium text-gray-700">
-                    First Name
+                    First Name *
                   </Label>
                   <Input
                     id="first_name"
@@ -104,31 +158,50 @@ export function RegisterPage() {
                     value={formData.first_name}
                     onChange={handleChange}
                     required
+                    maxLength={100}
                     disabled={loading}
-                    className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+                    className={`h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 ${
+                      fieldErrors.first_name ? 'border-red-500' : ''
+                    }`}
                     placeholder="John"
                   />
+                  {fieldErrors.first_name && (
+                    <p className="text-xs text-red-500 flex items-center gap-1">
+                      <XCircle className="h-3 w-3" />
+                      {fieldErrors.first_name}
+                    </p>
+                  )}
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="middle_name" className="text-sm font-medium text-gray-700">
-                    Middle Name
+                    Middle Name *
                   </Label>
                   <Input
                     id="middle_name"
                     name="middle_name"
                     value={formData.middle_name}
                     onChange={handleChange}
+                    required
+                    maxLength={100}
                     disabled={loading}
-                    className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+                    className={`h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 ${
+                      fieldErrors.middle_name ? 'border-red-500' : ''
+                    }`}
                     placeholder="Michael"
                   />
+                  {fieldErrors.middle_name && (
+                    <p className="text-xs text-red-500 flex items-center gap-1">
+                      <XCircle className="h-3 w-3" />
+                      {fieldErrors.middle_name}
+                    </p>
+                  )}
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="last_name" className="text-sm font-medium text-gray-700">
-                  Last Name
+                  Last Name *
                 </Label>
                 <Input
                   id="last_name"
@@ -136,10 +209,19 @@ export function RegisterPage() {
                   value={formData.last_name}
                   onChange={handleChange}
                   required
+                  maxLength={100}
                   disabled={loading}
-                  className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+                  className={`h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 ${
+                    fieldErrors.last_name ? 'border-red-500' : ''
+                  }`}
                   placeholder="Doe"
                 />
+                {fieldErrors.last_name && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    <XCircle className="h-3 w-3" />
+                    {fieldErrors.last_name}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -159,7 +241,7 @@ export function RegisterPage() {
               
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                  Email Address
+                  Email Address *
                 </Label>
                 <Input
                   id="email"
@@ -170,13 +252,21 @@ export function RegisterPage() {
                   onChange={handleChange}
                   required
                   disabled={loading}
-                  className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+                  className={`h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 ${
+                    fieldErrors.email ? 'border-red-500' : ''
+                  }`}
                 />
+                {fieldErrors.email && (
+                  <p className="text-xs text-red-500 flex items-center gap-1">
+                    <XCircle className="h-3 w-3" />
+                    {fieldErrors.email}
+                  </p>
+                )}
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                  Password
+                  Password *
                 </Label>
                 <div className="relative">
                   <Input
@@ -187,7 +277,9 @@ export function RegisterPage() {
                     onChange={handleChange}
                     required
                     disabled={loading}
-                    className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 pr-10"
+                    className={`h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 pr-10 ${
+                      fieldErrors.password ? 'border-red-500' : ''
+                    }`}
                     placeholder="Create a strong password"
                   />
                   <button
@@ -198,20 +290,79 @@ export function RegisterPage() {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
-                <div className="space-y-2 text-xs text-gray-600">
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="w-3 h-3 text-green-500" />
-                    <span>At least 8 characters</span>
+                
+                {/* Password Requirements - Dynamic */}
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    {formData.password.length >= 8 ? (
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                    ) : (
+                      <XCircle className="h-3.5 w-3.5 text-gray-400" />
+                    )}
+                    <span className={formData.password.length >= 8 ? 'text-emerald-600' : 'text-gray-600'}>
+                      At least 8 characters
+                    </span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="w-3 h-3 text-green-500" />
-                    <span>Include uppercase and lowercase letters</span>
+                  <div className="flex items-center gap-1.5">
+                    {/\d/.test(formData.password) ? (
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                    ) : (
+                      <XCircle className="h-3.5 w-3.5 text-gray-400" />
+                    )}
+                    <span className={/\d/.test(formData.password) ? 'text-emerald-600' : 'text-gray-600'}>
+                      One digit
+                    </span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="w-3 h-3 text-green-500" />
-                    <span>Include at least one number</span>
+                  <div className="flex items-center gap-1.5">
+                    {/[A-Z]/.test(formData.password) ? (
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                    ) : (
+                      <XCircle className="h-3.5 w-3.5 text-gray-400" />
+                    )}
+                    <span className={/[A-Z]/.test(formData.password) ? 'text-emerald-600' : 'text-gray-600'}>
+                      One uppercase letter
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {/[a-z]/.test(formData.password) ? (
+                      <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                    ) : (
+                      <XCircle className="h-3.5 w-3.5 text-gray-400" />
+                    )}
+                    <span className={/[a-z]/.test(formData.password) ? 'text-emerald-600' : 'text-gray-600'}>
+                      One lowercase letter
+                    </span>
                   </div>
                 </div>
+
+                {/* Password Strength Indicator */}
+                {passwordStrength && formData.password.length > 0 && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-300 ${
+                          passwordStrength.strength === 'weak' ? 'w-1/3 bg-red-500' :
+                          passwordStrength.strength === 'medium' ? 'w-2/3 bg-amber-500' :
+                          'w-full bg-emerald-500'
+                        }`}
+                      />
+                    </div>
+                    <span className={`text-xs font-medium ${
+                      passwordStrength.strength === 'weak' ? 'text-red-600' :
+                      passwordStrength.strength === 'medium' ? 'text-amber-600' :
+                      'text-emerald-600'
+                    }`}>
+                      {passwordStrength.message}
+                    </span>
+                  </div>
+                )}
+
+                {fieldErrors.password && (
+                  <p className="text-xs text-red-500 flex items-center gap-1 mt-2">
+                    <XCircle className="h-3 w-3" />
+                    {fieldErrors.password}
+                  </p>
+                )}
               </div>
             </CardContent>
             
