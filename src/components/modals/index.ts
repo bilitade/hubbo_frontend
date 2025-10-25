@@ -28,3 +28,6 @@ export { CreatePermissionModal } from './CreatePermissionModal';
 // Experiment Modals
 export { CreateExperimentModal } from './CreateExperimentModal';
 export { EditExperimentModal } from './EditExperimentModal';
+
+// Profile Modals
+export { ProfileSettingsModal } from './ProfileSettingsModal';

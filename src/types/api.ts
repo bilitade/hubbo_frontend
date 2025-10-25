@@ -60,6 +60,7 @@ export interface UserProfileUpdate {
   middle_name?: string | null;
   last_name?: string | null;
   email?: string | null;
+  current_password?: string | null;
   password?: string | null;
   
   // Optional profile fields
