@@ -15,7 +15,6 @@ import {
   User,
   Sparkles,
   MoreVertical,
-  Settings,
   Edit3,
   ArchiveRestore,
 } from 'lucide-react';
@@ -56,13 +55,12 @@ interface Message {
 export function HubboChat() {
   const [chats, setChats] = useState<Chat[]>([]);
   const [currentChat, setCurrentChat] = useState<Chat | null>(null);
-  const [threads, setThreads] = useState<Thread[]>([]);
   const [currentThread, setCurrentThread] = useState<Thread | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(true);
+  const [showArchived, setShowArchived] = useState(false);
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -77,7 +75,7 @@ export function HubboChat() {
 
   useEffect(() => {
     loadChats();
-  }, []);
+  }, [showArchived]);
 
   useEffect(() => {
     if (currentChat) {
@@ -94,7 +92,7 @@ export function HubboChat() {
   const loadChats = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.listChats(false, 50);
+      const response = await apiClient.listChats(showArchived, 50);
       setChats(response.chats || []);
       
       // Auto-select first chat if available
@@ -111,7 +109,6 @@ export function HubboChat() {
   const loadThreads = async (chatId: string) => {
     try {
       const response = await apiClient.listChatThreads(chatId, false);
-      setThreads(response.threads || []);
       
       // Auto-select first thread if available
       if (response.threads && response.threads.length > 0 && !currentThread) {
@@ -148,7 +145,6 @@ export function HubboChat() {
       });
       setChats([chat, ...chats]);
       setCurrentChat(chat);
-      setThreads([]);
       setCurrentThread(null);
       setMessages([]);
       return chat;
@@ -290,27 +286,59 @@ export function HubboChat() {
   };
 
   return (
-    <div className="flex h-[70vh] bg-background rounded-lg border border-border overflow-hidden shadow-sm">
+    <div className="flex h-[75vh] bg-card rounded-lg border border-border overflow-hidden shadow-sm mx-4 mt-2 mb-4">
       {/* Sidebar */}
-      {showSidebar && (
-        <div className="w-60 border-r border-border flex flex-col bg-card">
+      <div className="w-60 border-r border-border flex flex-col bg-card">
           {/* Header */}
-          <div className="p-3 border-b border-border">
-            <Button onClick={createNewChat} className="w-full h-9" size="sm">
+          <div className="p-3 border-b border-border space-y-2">
+            <Button onClick={() => createNewChat()} className="w-full h-9" size="sm">
               <Plus className="h-4 w-4 mr-2" />
               New Chat
             </Button>
+            
+            {/* Archive Toggle */}
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => setShowArchived(false)}
+                variant={!showArchived ? "default" : "outline"}
+                size="sm"
+                className="flex-1 h-8 text-xs"
+              >
+                <MessageSquare className="h-3 w-3 mr-1.5" />
+                Active
+              </Button>
+              <Button
+                onClick={() => setShowArchived(true)}
+                variant={showArchived ? "default" : "outline"}
+                size="sm"
+                className="flex-1 h-8 text-xs"
+              >
+                <Archive className="h-3 w-3 mr-1.5" />
+                Archived
+              </Button>
+            </div>
           </div>
 
           {/* Chat List */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: 'hsl(var(--muted)) transparent' }}>
             {loading ? (
               <div className="flex items-center justify-center p-6">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
             ) : chats.length === 0 ? (
-              <div className="p-3 text-xs text-muted-foreground text-center">
-                No chats yet. Create one to get started!
+              <div className="p-4 text-center">
+                <div className="mb-2">
+                  {showArchived ? (
+                    <Archive className="h-8 w-8 mx-auto text-muted-foreground opacity-50" />
+                  ) : (
+                    <MessageSquare className="h-8 w-8 mx-auto text-muted-foreground opacity-50" />
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {showArchived 
+                    ? 'No archived conversations' 
+                    : 'No chats yet. Create one to get started!'}
+                </p>
               </div>
             ) : (
               <div className="p-2">
@@ -411,10 +439,9 @@ export function HubboChat() {
             )}
           </div>
         </div>
-      )}
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col max-w-5xl mx-auto w-full">
+      <div className="flex-1 flex flex-col w-full bg-card">
         {/* Chat Header */}
         <div className="border-b border-border px-6 py-3 bg-card">
           <div className="flex items-center gap-3">
@@ -431,7 +458,7 @@ export function HubboChat() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4" style={{ scrollbarWidth: 'thin', scrollbarColor: 'hsl(var(--muted)) transparent' }}>
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center px-4 py-8">
               <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-3 shadow-lg">
@@ -443,25 +470,37 @@ export function HubboChat() {
                 team workload, or anything else about your projects.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-w-xl w-full">
-                <Card className="p-3 hover:bg-muted/30 cursor-pointer transition-all duration-200 border-border/50 hover:border-primary/30">
+                <Card 
+                  className="p-3 hover:bg-muted/30 cursor-pointer transition-all duration-200 border-border/50 hover:border-primary/30"
+                  onClick={() => setInputMessage("What's the status of all my projects?")}
+                >
                   <p className="text-xs font-medium mb-0.5">📊 Project Status</p>
                   <p className="text-[11px] text-muted-foreground">
                     "What's the status of all my projects?"
                   </p>
                 </Card>
-                <Card className="p-3 hover:bg-muted/30 cursor-pointer transition-all duration-200 border-border/50 hover:border-primary/30">
+                <Card 
+                  className="p-3 hover:bg-muted/30 cursor-pointer transition-all duration-200 border-border/50 hover:border-primary/30"
+                  onClick={() => setInputMessage("Show me all in-progress tasks")}
+                >
                   <p className="text-xs font-medium mb-0.5">✅ Task Overview</p>
                   <p className="text-[11px] text-muted-foreground">
                     "Show me all in-progress tasks"
                   </p>
                 </Card>
-                <Card className="p-3 hover:bg-muted/30 cursor-pointer transition-all duration-200 border-border/50 hover:border-primary/30">
+                <Card 
+                  className="p-3 hover:bg-muted/30 cursor-pointer transition-all duration-200 border-border/50 hover:border-primary/30"
+                  onClick={() => setInputMessage("Who has the most tasks assigned?")}
+                >
                   <p className="text-xs font-medium mb-0.5">👥 Team Workload</p>
                   <p className="text-[11px] text-muted-foreground">
                     "Who has the most tasks assigned?"
                   </p>
                 </Card>
-                <Card className="p-3 hover:bg-muted/30 cursor-pointer transition-all duration-200 border-border/50 hover:border-primary/30">
+                <Card 
+                  className="p-3 hover:bg-muted/30 cursor-pointer transition-all duration-200 border-border/50 hover:border-primary/30"
+                  onClick={() => setInputMessage("What should I focus on today?")}
+                >
                   <p className="text-xs font-medium mb-0.5">💡 Suggestions</p>
                   <p className="text-[11px] text-muted-foreground">
                     "What should I focus on today?"
@@ -497,7 +536,7 @@ export function HubboChat() {
                   <p className="text-[10px] opacity-60 mt-1.5">{formatTime(message.created_at)}</p>
                 </div>
                 {message.role === 'user' && (
-                  <div className="h-7 w-7 rounded-full bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <div className="h-7 w-7 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">
                     <User className="h-4 w-4 text-white" />
                   </div>
                 )}

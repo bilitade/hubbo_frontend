@@ -13,7 +13,7 @@ import { UsersPage } from './features/users/UsersPage';
 import { RolesPage } from './features/roles/RolesPage';
 import { PermissionsPage } from './features/permissions/PermissionsPage';
 import { AIPage } from './features/ai/AIPage';
-import { HubboChat } from './features/chat/GuruChat';
+import { HubboChat } from './features/chat/HubboChat';
 import { FilesPage } from './features/files/FilesPage';
 import { IdeasPage } from './features/ideas/IdeasPage';
 import { ProjectsPage } from './features/projects/ProjectsPage';
