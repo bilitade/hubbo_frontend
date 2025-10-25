@@ -16,7 +16,11 @@ import {
   Check,
   Circle,
   Clock,
-  PartyPopper
+  PartyPopper,
+  Edit,
+  Trash2,
+  Save,
+  Plus
 } from 'lucide-react';
 import { apiClient } from '../../services/api';
 import type { TaskDetailResponse, TaskActivityResponse, TaskCommentResponse, UserResponse } from '../../types/api';
@@ -38,6 +42,13 @@ export function TaskDetailModal({ taskId, open, onOpenChange, onSuccess }: TaskD
   const [assignedTo, setAssignedTo] = useState<string>('');
   const [accountableId, setAccountableId] = useState<string>('');
   const [showCompletionMessage, setShowCompletionMessage] = useState(false);
+  const [editingTask, setEditingTask] = useState(false);
+  const [editedTitle, setEditedTitle] = useState('');
+  const [editedDescription, setEditedDescription] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [newSubtask, setNewSubtask] = useState('');
+  const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
+  const [editedSubtaskText, setEditedSubtaskText] = useState('');
 
   useEffect(() => {
     if (taskId && open) {
@@ -55,6 +66,8 @@ export function TaskDetailModal({ taskId, open, onOpenChange, onSuccess }: TaskD
       setTask(data);
       setAssignedTo(data.assigned_to || '');
       setAccountableId(data.accountable_id || '');
+      setEditedTitle(data.title);
+      setEditedDescription(data.description || '');
     } catch (error) {
       console.error('Failed to load task:', error);
     } finally {
@@ -141,7 +154,7 @@ export function TaskDetailModal({ taskId, open, onOpenChange, onSuccess }: TaskD
       });
       setEditingAssignments(false);
       await loadTaskDetails();
-      onSuccess();
+      onSuccess(); // Refresh parent to update kanban columns
     } catch (error) {
       console.error('Failed to update assignments:', error);
       alert('Failed to update assignments');
@@ -153,16 +166,101 @@ export function TaskDetailModal({ taskId, open, onOpenChange, onSuccess }: TaskD
     setTask(null);
     setComment('');
     setEditingAssignments(false);
+    setEditingTask(false);
+    setShowDeleteConfirm(false);
+  };
+
+  const handleEditTask = () => {
+    if (task) {
+      setEditedTitle(task.title);
+      setEditedDescription(task.description || '');
+      setEditingTask(true);
+    }
+  };
+
+  const handleSaveTask = async () => {
+    if (!taskId || !editedTitle.trim()) return;
+
+    try {
+      await apiClient.updateTask(taskId, {
+        title: editedTitle,
+        description: editedDescription || undefined,
+      });
+      setEditingTask(false);
+      await loadTaskDetails();
+      onSuccess();
+    } catch (error) {
+      console.error('Failed to update task:', error);
+      alert('Failed to update task');
+    }
+  };
+
+  const handleDeleteTask = async () => {
+    if (!taskId) return;
+
+    try {
+      await apiClient.deleteTask(taskId);
+      onSuccess();
+      handleClose();
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+      alert('Failed to delete task');
+    }
+  };
+
+  const handleAddSubtask = async () => {
+    if (!taskId || !newSubtask.trim()) return;
+
+    try {
+      await apiClient.createTaskActivity(taskId, { title: newSubtask.trim(), completed: false });
+      setNewSubtask('');
+      await loadTaskDetails();
+      onSuccess();
+    } catch (error) {
+      console.error('Failed to add subtask:', error);
+      alert('Failed to add subtask');
+    }
+  };
+
+  const handleEditSubtask = (activity: TaskActivityResponse) => {
+    setEditingSubtaskId(activity.id);
+    setEditedSubtaskText(activity.title);
+  };
+
+  const handleSaveSubtask = async (activityId: string) => {
+    if (!taskId || !editedSubtaskText.trim()) return;
+
+    try {
+      await apiClient.updateTaskActivity(taskId, activityId, { title: editedSubtaskText.trim() });
+      setEditingSubtaskId(null);
+      setEditedSubtaskText('');
+      await loadTaskDetails();
+      onSuccess();
+    } catch (error) {
+      console.error('Failed to update subtask:', error);
+      alert('Failed to update subtask');
+    }
+  };
+
+  const handleDeleteSubtask = async (activityId: string) => {
+    if (!taskId) return;
+    if (!confirm('Delete this subtask?')) return;
+
+    try {
+      await apiClient.deleteTaskActivity(taskId, activityId);
+      await loadTaskDetails();
+      onSuccess();
+    } catch (error) {
+      console.error('Failed to delete subtask:', error);
+      alert('Failed to delete subtask');
+    }
   };
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      'todo': 'bg-gray-100 text-gray-700',
+      'unassigned': 'bg-gray-100 text-gray-700',
       'in_progress': 'bg-blue-100 text-blue-700',
-      'under_review': 'bg-yellow-100 text-yellow-700',
-      'completed': 'bg-green-100 text-green-700',
       'done': 'bg-green-100 text-green-700',
-      'blocked': 'bg-red-100 text-red-700',
     };
     return colors[status] || 'bg-gray-100 text-gray-700';
   };
@@ -187,27 +285,91 @@ export function TaskDetailModal({ taskId, open, onOpenChange, onSuccess }: TaskD
 
   if (!task) return null;
 
+  if (showDeleteConfirm) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md">
+          <div className="p-6">
+            <DialogTitle className="text-xl font-bold mb-2">Delete Task</DialogTitle>
+            <p className="text-sm text-muted-foreground mb-6">
+              Are you sure you want to delete this task? This will also delete all subtasks, comments, and attachments. This action cannot be undone.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteTask}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Task
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[60vw] min-w-[900px] max-h-[90vh] overflow-hidden p-0 flex flex-col">
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
-              <CheckSquare className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex-1">
-              <DialogTitle className="text-xl font-bold">{task.title}</DialogTitle>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge className={`text-xs ${getStatusColor(task.status)}`}>
-                  {task.status.replace('_', ' ')}
-                </Badge>
-                {task.backlog && (
-                  <Badge variant="secondary" className="text-xs">
-                    {task.backlog.replace('_', ' ')}
-                  </Badge>
-                )}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 flex-1">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
+                <CheckSquare className="w-5 h-5 text-white" />
               </div>
+              <div className="flex-1">
+                {editingTask ? (
+                  <Input
+                    value={editedTitle}
+                    onChange={(e) => setEditedTitle(e.target.value)}
+                    className="text-xl font-bold h-10 mb-2"
+                    placeholder="Task title"
+                  />
+                ) : (
+                  <DialogTitle className="text-xl font-bold">{task.title}</DialogTitle>
+                )}
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge className={`text-xs ${getStatusColor(task.status)}`}>
+                    {task.status.replace('_', ' ')}
+                  </Badge>
+                  {task.backlog && (
+                    <Badge variant="secondary" className="text-xs">
+                      {task.backlog.replace('_', ' ')}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              {editingTask ? (
+                <>
+                  <Button variant="outline" size="sm" onClick={() => setEditingTask(false)}>
+                    Cancel
+                  </Button>
+                  <Button size="sm" onClick={handleSaveTask}>
+                    <Save className="h-4 w-4 mr-1" />
+                    Save
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" size="sm" onClick={handleEditTask}>
+                    <Edit className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -225,14 +387,24 @@ export function TaskDetailModal({ taskId, open, onOpenChange, onSuccess }: TaskD
           )}
 
           {/* Description */}
-          {task.description && (
+          {editingTask ? (
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-muted-foreground">Description</Label>
+              <textarea
+                value={editedDescription}
+                onChange={(e) => setEditedDescription(e.target.value)}
+                placeholder="Enter task description..."
+                className="w-full h-24 rounded-md border border-input bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              />
+            </div>
+          ) : task.description ? (
             <div className="space-y-2">
               <Label className="text-sm font-semibold text-muted-foreground">Description</Label>
               <p className="text-sm text-gray-700 dark:text-gray-300 bg-muted/30 p-3 rounded-md">
                 {task.description}
               </p>
             </div>
-          )}
+          ) : null}
 
           {/* Assignments */}
           <div className="space-y-3">
@@ -380,34 +552,100 @@ export function TaskDetailModal({ taskId, open, onOpenChange, onSuccess }: TaskD
               </div>
             )}
 
+            {/* Subtasks List */}
             {task.activities && task.activities.length > 0 ? (
               <div className="space-y-2">
                 {task.activities.map((activity) => (
-                  <button
+                  <div
                     key={activity.id}
-                    onClick={() => handleToggleActivity(activity.id, activity.completed)}
-                    className="w-full flex items-center gap-3 p-3 bg-card hover:bg-muted/50 rounded-lg border transition-all group text-left"
+                    className="flex items-center gap-2 p-3 bg-card hover:bg-muted/50 rounded-lg border transition-all group"
                   >
-                    <div className={`flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                      activity.completed 
-                        ? 'bg-green-500 border-green-500' 
-                        : 'border-gray-300 group-hover:border-blue-500'
-                    }`}>
-                      {activity.completed && <Check className="h-3 w-3 text-white" />}
+                    <button
+                      onClick={() => handleToggleActivity(activity.id, activity.completed)}
+                      className="flex-shrink-0"
+                    >
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                        activity.completed 
+                          ? 'bg-green-500 border-green-500' 
+                          : 'border-gray-300 group-hover:border-blue-500'
+                      }`}>
+                        {activity.completed && <Check className="h-3 w-3 text-white" />}
+                      </div>
+                    </button>
+                    
+                    {editingSubtaskId === activity.id ? (
+                      <Input
+                        value={editedSubtaskText}
+                        onChange={(e) => setEditedSubtaskText(e.target.value)}
+                        className="flex-1 h-8 text-sm"
+                        placeholder="Subtask title"
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleSaveSubtask(activity.id);
+                          } else if (e.key === 'Escape') {
+                            setEditingSubtaskId(null);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <span className={`flex-1 text-sm ${
+                        activity.completed 
+                          ? 'line-through text-muted-foreground' 
+                          : 'text-foreground'
+                      }`}>
+                        {activity.title}
+                      </span>
+                    )}
+                    
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {editingSubtaskId === activity.id ? (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingSubtaskId(null)}
+                            className="h-7 w-7 p-0"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSaveSubtask(activity.id)}
+                            className="h-7 w-7 p-0 text-green-600"
+                          >
+                            <Check className="h-3 w-3" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditSubtask(activity)}
+                            className="h-7 w-7 p-0"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteSubtask(activity.id)}
+                            className="h-7 w-7 p-0 text-red-600"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </>
+                      )}
                     </div>
-                    <span className={`flex-1 text-sm ${
-                      activity.completed 
-                        ? 'line-through text-muted-foreground' 
-                        : 'text-foreground'
-                    }`}>
-                      {activity.title}
-                    </span>
+                    
                     {activity.completed && (
                       <Badge variant="secondary" className="text-xs">
                         Done
                       </Badge>
                     )}
-                  </button>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -416,6 +654,31 @@ export function TaskDetailModal({ taskId, open, onOpenChange, onSuccess }: TaskD
                 <p className="text-xs text-muted-foreground">No subtasks yet</p>
               </div>
             )}
+
+            {/* Add New Subtask */}
+            <div className="flex gap-2">
+              <Input
+                value={newSubtask}
+                onChange={(e) => setNewSubtask(e.target.value)}
+                placeholder="Add new subtask..."
+                className="flex-1 h-9 text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddSubtask();
+                  }
+                }}
+              />
+              <Button
+                onClick={handleAddSubtask}
+                disabled={!newSubtask.trim()}
+                size="sm"
+                className="h-9"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add
+              </Button>
+            </div>
           </div>
 
           {/* Comments Section */}

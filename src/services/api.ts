@@ -581,10 +581,13 @@ class ApiClient {
     return response.data;
   }
 
-  async updateTaskActivity(taskId: string, activityId: string, completed: boolean): Promise<TaskActivityResponse> {
+  async updateTaskActivity(taskId: string, activityId: string, data: { completed?: boolean; title?: string } | boolean): Promise<TaskActivityResponse> {
+    // Support both old signature (boolean) and new signature (object)
+    const updateData = typeof data === 'boolean' ? { completed: data } : data;
+    
     const response = await this.client.patch<TaskActivityResponse>(
       `/api/v1/tasks/${taskId}/activities/${activityId}`,
-      { completed }
+      updateData
     );
     return response.data;
   }
