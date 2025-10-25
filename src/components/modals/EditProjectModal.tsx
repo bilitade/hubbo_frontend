@@ -7,7 +7,7 @@ import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import { Save, X, Edit, Archive, Trash2, FolderKanban, CheckSquare, Clock, User, Calendar, BarChart3 } from 'lucide-react';
 import { apiClient } from '../../services/api';
-import type { ProjectResponse, ProjectUpdate, TaskResponse } from '../../types/api';
+import type { ProjectResponse, ProjectUpdate, TaskResponse, UserResponse } from '../../types/api';
 
 interface EditProjectModalProps {
   project: ProjectResponse | null;
@@ -31,10 +31,32 @@ export function EditProjectModal({ project, open, onOpenChange, onSuccess, onDel
   const [tasks, setTasks] = useState<TaskResponse[]>([]);
   const [loadingTasks, setLoadingTasks] = useState(false);
   const [activeTab, setActiveTab] = useState<'info' | 'tasks'>('info');
+  const [ownerInfo, setOwnerInfo] = useState<UserResponse | null>(null);
+  const [loadingOwner, setLoadingOwner] = useState(false);
 
   useEffect(() => {
     if (project && open) {
       loadProjectTasks();
+      
+      // Fetch owner information
+      if (project.owner_id) {
+        const fetchOwner = async () => {
+          setLoadingOwner(true);
+          try {
+            const user = await apiClient.getUser(project.owner_id!);
+            setOwnerInfo(user);
+          } catch (error) {
+            console.error('Failed to fetch owner info:', error);
+            setOwnerInfo(null);
+          } finally {
+            setLoadingOwner(false);
+          }
+        };
+        
+        fetchOwner();
+      } else {
+        setOwnerInfo(null);
+      }
     }
   }, [project, open]);
 
@@ -175,11 +197,25 @@ export function EditProjectModal({ project, open, onOpenChange, onSuccess, onDel
                 <DialogTitle className="text-xl font-bold">
                   {isEditMode ? 'Edit Project' : project.title}
                 </DialogTitle>
-                {project.project_number && (
-                  <Badge variant="outline" className="text-xs mt-1">
-                    {project.project_number}
-                  </Badge>
-                )}
+                <div className="flex items-center gap-2 mt-1">
+                  {project.project_number && (
+                    <Badge variant="outline" className="text-xs">
+                      {project.project_number}
+                    </Badge>
+                  )}
+                  {ownerInfo && (
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <User className="h-3 w-3" />
+                      <span>Owner: {ownerInfo.first_name} {ownerInfo.middle_name} {ownerInfo.last_name}</span>
+                    </div>
+                  )}
+                  {loadingOwner && (
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <div className="animate-spin rounded-full h-3 w-3 border-b border-muted-foreground"></div>
+                      <span>Loading owner info...</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             {!isEditMode && (

@@ -4,9 +4,9 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Lightbulb, X, Trash2, Archive, Rocket, Bot, Sparkles } from 'lucide-react';
+import { Lightbulb, X, Trash2, Archive, Rocket, Bot, Sparkles, User } from 'lucide-react';
 import { apiClient } from '../../services/api';
-import type { IdeaResponse, IdeaUpdate } from '../../types/api';
+import type { IdeaResponse, IdeaUpdate, UserResponse } from '../../types/api';
 
 interface EditIdeaModalProps {
   idea: IdeaResponse | null;
@@ -29,6 +29,8 @@ export function EditIdeaModal({ idea, open, onOpenChange, onSuccess, onMoveToPro
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [aiEnhancing, setAiEnhancing] = useState(false);
   const [aiSuggestingDepts, setAiSuggestingDepts] = useState(false);
+  const [creatorInfo, setCreatorInfo] = useState<UserResponse | null>(null);
+  const [loadingCreator, setLoadingCreator] = useState(false);
 
   const predefinedDepartments = [
     'Marketing',
@@ -49,6 +51,22 @@ export function EditIdeaModal({ idea, open, onOpenChange, onSuccess, onMoveToPro
         status: idea.status,
       });
       setDepartments(idea.departments || []);
+      
+      // Fetch creator information
+      const fetchCreator = async () => {
+        setLoadingCreator(true);
+        try {
+          const user = await apiClient.getUser(idea.user_id);
+          setCreatorInfo(user);
+        } catch (error) {
+          console.error('Failed to fetch creator info:', error);
+          setCreatorInfo(null);
+        } finally {
+          setLoadingCreator(false);
+        }
+      };
+      
+      fetchCreator();
     }
   }, [idea]);
 
@@ -239,7 +257,21 @@ export function EditIdeaModal({ idea, open, onOpenChange, onSuccess, onMoveToPro
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-lg">
                 <Lightbulb className="w-5 h-5 text-white" />
               </div>
-              <DialogTitle className="text-xl font-bold">Edit Idea</DialogTitle>
+              <div>
+                <DialogTitle className="text-xl font-bold">Edit Idea</DialogTitle>
+                {creatorInfo && (
+                  <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
+                    <User className="h-3 w-3" />
+                    <span>Created by: {creatorInfo.first_name} {creatorInfo.middle_name} {creatorInfo.last_name}</span>
+                  </div>
+                )}
+                {loadingCreator && (
+                  <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
+                    <div className="animate-spin rounded-full h-3 w-3 border-b border-muted-foreground"></div>
+                    <span>Loading creator info...</span>
+                  </div>
+                )}
+              </div>
             </div>
             {onMoveToProject && (
               <Button 
