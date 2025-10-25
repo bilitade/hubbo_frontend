@@ -3,83 +3,141 @@
 @tailwind utilities;
 
 @layer base {
+  /* Light Mode - Company Theme */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Backgrounds */
+    --background: 0 0% 100%;                    /* Pure white */
+    --foreground: 0 0% 10%;                     /* Near black for text */
+    
+    /* Cards */
+    --card: 0 0% 100%;                          /* White cards */
+    --card-foreground: 0 0% 10%;
+    
+    /* Popovers */
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    --popover-foreground: 0 0% 10%;
+    
+    /* Primary - Cyan Blue #00adef */
+    --primary: 195 100% 47%;                    /* Company primary color */
+    --primary-foreground: 0 0% 100%;            /* White text on primary */
+    
+    /* Secondary - Black with variations */
+    --secondary: 0 0% 96%;                      /* Light gray for secondary elements */
+    --secondary-foreground: 0 0% 10%;           /* Dark text */
+    
+    /* Accent - Orange #e38524 */
+    --accent: 28 76% 52%;                       /* Company accent color */
+    --accent-foreground: 0 0% 100%;             /* White text on accent */
+    
+    /* Muted */
+    --muted: 195 20% 96%;                       /* Subtle blue-gray */
+    --muted-foreground: 195 10% 40%;
+    
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders */
+    --border: 195 20% 90%;                      /* Subtle blue-tinted borders */
+    --input: 195 20% 88%;
+    --ring: 195 100% 47%;                       /* Primary color for focus rings */
+    
+    /* Radius */
+    --radius: 0.75rem;                          /* Modern, rounded corners */
   }
 
+  /* Dark Mode - Company Theme */
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    /* Backgrounds */
+    --background: 0 0% 8%;                      /* Very dark, not pure black */
+    --foreground: 0 0% 95%;                     /* Off-white text */
+    
+    /* Cards */
+    --card: 0 0% 12%;                           /* Slightly lighter than background */
+    --card-foreground: 0 0% 95%;
+    
+    /* Popovers */
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
+    
+    /* Primary - Brighter cyan for dark mode */
+    --primary: 195 100% 55%;                    /* Slightly brighter for visibility */
+    --primary-foreground: 0 0% 10%;             /* Dark text on primary in dark mode */
+    
+    /* Secondary */
+    --secondary: 0 0% 18%;                      /* Dark gray */
+    --secondary-foreground: 0 0% 95%;
+    
+    /* Accent - Brighter orange for dark mode */
+    --accent: 28 90% 60%;                       /* Brighter accent */
+    --accent-foreground: 0 0% 10%;
+    
+    /* Muted */
+    --muted: 195 10% 20%;                       /* Dark blue-gray */
+    --muted-foreground: 195 10% 65%;
+    
+    /* Destructive */
+    --destructive: 0 75% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders */
+    --border: 195 10% 25%;
+    --input: 195 10% 25%;
+    --ring: 195 100% 55%;
   }
 }
 
 @layer base {
   * {
-    border-color: hsl(var(--border));
+    @apply border-border;
   }
+  
+  /* Smooth theme transitions - prevent glitching */
+  html {
+    transition: background-color 0s, color 0s;
+  }
+  
+  html.dark,
+  html.light {
+    transition: none;
+  }
+  
   body {
-    background-color: hsl(var(--background));
-    color: hsl(var(--foreground));
+    @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
-    overflow-x: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Disable transitions during theme change to prevent glitching */
+  html.changing-theme * {
+    transition: none !important;
   }
 
-  /* Custom scrollbar styling */
+  /* Custom Scrollbars - Brand Themed */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
   }
 
   ::-webkit-scrollbar-track {
-    background: hsl(var(--muted));
+    @apply bg-muted/30;
+    border-radius: 5px;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.3);
-    border-radius: 4px;
+    background: linear-gradient(135deg, #00adef 0%, #0090cc 100%);
+    border-radius: 5px;
+    border: 2px solid hsl(var(--background));
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
+    background: linear-gradient(135deg, #1ab1ff 0%, #00adef 100%);
   }
 
-  /* Custom scrollbar for Kanban columns */
+  /* Thin Scrollbar for Kanban */
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -90,54 +148,78 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.2);
+    background: rgba(0, 173, 239, 0.3);
     border-radius: 3px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.4);
-  }
-
-  /* Smooth scrolling */
-  .overflow-x-auto {
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Thin scrollbar utility classes */
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
-    background-color: rgb(209 213 219 / 0.5);
-    border-radius: 2px;
-  }
-
-  .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb:hover {
-    background-color: rgb(209 213 219 / 0.8);
-  }
-
-  .scrollbar-track-transparent::-webkit-scrollbar-track {
-    background: transparent;
+    background: rgba(0, 173, 239, 0.5);
   }
 
   /* Dark mode scrollbar */
-  .dark .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
-    background-color: rgb(75 85 99 / 0.5);
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 173, 239, 0.4);
   }
 
-  .dark .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb:hover {
-    background-color: rgb(75 85 99 / 0.8);
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 173, 239, 0.6);
   }
 }
 
-/* Landing Page Animations */
+/* Brand Gradient Utilities */
+@layer utilities {
+  .bg-brand-gradient {
+    background: linear-gradient(135deg, #00adef 0%, #0090cc 100%);
+  }
+  
+  .bg-brand-gradient-hover {
+    background: linear-gradient(135deg, #1ab1ff 0%, #00adef 100%);
+  }
+  
+  .bg-accent-gradient {
+    background: linear-gradient(135deg, #e38524 0%, #f6a71a 100%);
+  }
+  
+  .bg-hero-gradient {
+    background: linear-gradient(135deg, #00adef 0%, #e38524 100%);
+  }
+  
+  .text-brand-gradient {
+    background: linear-gradient(135deg, #00adef 0%, #e38524 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .border-brand-gradient {
+    border-image: linear-gradient(135deg, #00adef 0%, #e38524 100%) 1;
+  }
+  
+  /* Glass Effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  .dark .glass {
+    background: rgba(0, 0, 0, 0.4);
+  }
+  
+  /* Shimmer Effect */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 173, 239, 0.1) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+}
+
+/* Animations */
 @keyframes float {
   0%, 100% {
     transform: translateY(0px);
@@ -156,6 +238,24 @@
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulse-brand {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
@@ -163,4 +263,24 @@
 .animate-float-delayed {
   animation: float-delayed 3s ease-in-out infinite;
   animation-delay: 0.5s;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s linear infinite;
+}
+
+.animate-pulse-brand {
+  animation: pulse-brand 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Smooth Transitions - but not during theme change */
+*:not(html.changing-theme *) {
+  transition: background-color 200ms ease-in-out, 
+              border-color 200ms ease-in-out, 
+              color 200ms ease-in-out, 
+              fill 200ms ease-in-out, 
+              stroke 200ms ease-in-out,
+              opacity 200ms ease-in-out,
+              box-shadow 200ms ease-in-out,
+              transform 200ms ease-in-out;
 }
