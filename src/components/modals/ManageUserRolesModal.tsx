@@ -2,14 +2,13 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../ui/dialog';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
-import { Checkbox } from '../ui/checkbox';
-import { Shield, Save } from 'lucide-react';
+import { Shield, Save, CheckCircle } from 'lucide-react';
 import type { UserResponse, RoleResponse } from '../../types/api';
 
 interface ManageUserRolesModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (selectedRoles: string[]) => Promise<void>;
+  onSubmit: (selectedRole: string) => Promise<void>;
   user: UserResponse | null;
   roles: RoleResponse[];
   updating: boolean;
@@ -23,17 +22,21 @@ export function ManageUserRolesModal({
   roles,
   updating 
 }: ManageUserRolesModalProps) {
-  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [selectedRole, setSelectedRole] = useState<string>('');
 
   useEffect(() => {
-    if (user) {
-      setSelectedRoles(user.roles.map(r => r.id));
+    if (user && user.roles.length > 0) {
+      setSelectedRole(user.roles[0].id);
     }
   }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(selectedRoles);
+    if (!selectedRole) {
+      alert('Please select a role');
+      return;
+    }
+    await onSubmit(selectedRole);
   };
 
   return (
@@ -59,25 +62,32 @@ export function ManageUserRolesModal({
           <div className="flex-1 overflow-y-auto px-6 py-4">
             <div className="space-y-3">
               {roles.map((role) => (
-                <div 
-                  key={role.id} 
-                  className="flex items-start gap-3 p-4 border border-border rounded-lg hover:bg-primary/5 hover:border-primary/30 transition-all"
+                <button
+                  key={role.id}
+                  type="button"
+                  onClick={() => setSelectedRole(role.id)}
+                  className={`w-full flex items-start gap-3 p-4 border-2 rounded-lg transition-all text-left ${
+                    selectedRole === role.id
+                      ? 'border-primary bg-primary/5 shadow-sm'
+                      : 'border-border hover:border-primary/50 hover:bg-muted/30'
+                  }`}
                 >
-                  <Checkbox
-                    id={`role-${role.id}`}
-                    checked={selectedRoles.includes(role.id)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedRoles([...selectedRoles, role.id]);
-                      } else {
-                        setSelectedRoles(selectedRoles.filter(id => id !== role.id));
-                      }
-                    }}
-                  />
-                  <div className="flex-1 pt-0.5">
-                    <Label htmlFor={`role-${role.id}`} className="font-semibold cursor-pointer text-base">
+                  <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                    selectedRole === role.id
+                      ? 'border-primary bg-primary'
+                      : 'border-muted-foreground'
+                  }`}>
+                    {selectedRole === role.id && (
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-semibold text-base flex items-center gap-2">
                       {role.name}
-                    </Label>
+                      {selectedRole === role.id && (
+                        <CheckCircle className="h-4 w-4 text-primary" />
+                      )}
+                    </div>
                     {role.description && (
                       <p className="text-sm text-muted-foreground mt-1">{role.description}</p>
                     )}
@@ -86,7 +96,7 @@ export function ManageUserRolesModal({
                       {role.permissions.length} permissions
                     </p>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>

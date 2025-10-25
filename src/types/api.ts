@@ -16,10 +16,22 @@ export interface UserResponse {
   first_name: string;
   middle_name: string;
   last_name: string;
-  role_title?: string | null;
   is_active: boolean;
   is_approved: boolean;
   roles: RoleResponse[];
+  
+  // Profile fields (now part of user)
+  display_name?: string | null;
+  avatar_url?: string | null;
+  bio?: string | null;
+  phone?: string | null;
+  position?: string | null;
+  team?: string | null;
+  department?: string | null;
+  
+  // Computed fields
+  full_name?: string | null;
+  preferred_name?: string | null;
 }
 
 export interface UserRegister {
@@ -28,7 +40,15 @@ export interface UserRegister {
   first_name: string;
   middle_name: string;
   last_name: string;
-  role_title?: string | null;
+  
+  // Optional profile fields
+  display_name?: string | null;
+  avatar_url?: string | null;
+  bio?: string | null;
+  phone?: string | null;
+  position?: string | null;
+  team?: string | null;
+  department?: string | null;
 }
 
 export interface UserCreate extends UserRegister {
@@ -39,9 +59,17 @@ export interface UserProfileUpdate {
   first_name?: string | null;
   middle_name?: string | null;
   last_name?: string | null;
-  role_title?: string | null;
   email?: string | null;
   password?: string | null;
+  
+  // Optional profile fields
+  display_name?: string | null;
+  avatar_url?: string | null;
+  bio?: string | null;
+  phone?: string | null;
+  position?: string | null;
+  team?: string | null;
+  department?: string | null;
 }
 
 export interface UserAdminUpdate extends UserProfileUpdate {
@@ -187,35 +215,6 @@ export interface ValidationError {
   type: string;
 }
 
-// Profile Types
-export interface ProfileResponse {
-  id: string;
-  display_name?: string | null;
-  avatar_url?: string | null;
-  team?: string | null;
-  position?: string | null;
-  email?: string | null;
-  needs_password_change: boolean;
-  disabled: boolean;
-  disabled_reason?: string | null;
-  disabled_at?: string | null;
-  disabled_by?: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface ProfileUpdate {
-  display_name?: string | null;
-  avatar_url?: string | null;
-  team?: string | null;
-  position?: string | null;
-  email?: string | null;
-  needs_password_change?: boolean | null;
-}
-
-export interface ProfileDisable {
-  disabled_reason: string;
-}
 
 // Idea Types
 export interface IdeaResponse {

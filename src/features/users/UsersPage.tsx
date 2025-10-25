@@ -85,7 +85,6 @@ export function UsersPage() {
     first_name: string;
     middle_name: string;
     last_name: string;
-    role_title?: string | null;
   }) => {
     setCreating(true);
     try {
@@ -95,7 +94,6 @@ export function UsersPage() {
         first_name: data.first_name,
         middle_name: data.middle_name,
         last_name: data.last_name,
-        role_title: data.role_title || null,
       };
       console.log('Creating user with payload:', payload);
       await apiClient.createUser(payload);
@@ -124,7 +122,6 @@ export function UsersPage() {
     middle_name: string;
     last_name: string;
     email: string;
-    role_title?: string | null;
   }) => {
     if (!selectedUser) return;
     setUpdating(true);
@@ -134,7 +131,6 @@ export function UsersPage() {
         middle_name: data.middle_name,
         last_name: data.last_name,
         email: data.email,
-        role_title: data.role_title,
       });
       setEditDialogOpen(false);
       setSelectedUser(null);
@@ -177,18 +173,29 @@ export function UsersPage() {
     }
   };
 
-  const handleManageRoles = async (selectedRoles: string[]) => {
+  const handleManageRoles = async (selectedRole: string) => {
     if (!selectedUser) return;
     setUpdating(true);
     try {
+      // Find the role name from the role ID
+      const role = roles.find(r => r.id === selectedRole);
+      if (!role) {
+        alert('Invalid role selected');
+        return;
+      }
+
+      console.log('Updating user role to:', role.name);
+      
       await apiClient.updateUser(selectedUser.id, {
-        role_ids: selectedRoles,
+        role_names: [role.name],
       });
+      
       setRoleDialogOpen(false);
       setSelectedUser(null);
       fetchUsers();
     } catch (err: any) {
-      alert(err.response?.data?.detail || 'Failed to update roles');
+      console.error('Update role error:', err.response?.data);
+      alert(err.response?.data?.detail || 'Failed to update role');
     } finally {
       setUpdating(false);
     }
@@ -304,8 +311,8 @@ export function UsersPage() {
                     <tr key={user.id} className="border-b border-border hover:bg-muted/50 transition-colors">
                       <td className="py-3 px-4">
                         <div className="font-medium">{user.first_name} {user.last_name}</div>
-                    {user.role_title && (
-                          <div className="text-xs text-muted-foreground">{user.role_title}</div>
+                    {user.position && (
+                          <div className="text-xs text-muted-foreground">{user.position}</div>
                         )}
                       </td>
                       <td className="py-3 px-4 text-sm text-muted-foreground">{user.email}</td>

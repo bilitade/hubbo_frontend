@@ -19,7 +19,6 @@ import { ProjectsPage } from './features/projects/ProjectsPage';
 import { ProjectProgressPage } from './features/projects/ProjectProgressPage';
 import { TasksPage } from './features/tasks/TasksPage';
 import { ExperimentsPage } from './features/experiments/ExperimentsPage';
-import { ProfilesPage } from './features/profiles/ProfilesPage';
 
 function App() {
   return (
@@ -50,7 +49,6 @@ function App() {
               <Route path="tasks" element={<TasksPage />} />
               <Route path="experiments" element={<ExperimentsPage />} />
               <Route path="users" element={<UsersPage />} />
-              <Route path="profiles" element={<ProfilesPage />} />
               <Route path="roles" element={<RolesPage />} />
               <Route path="permissions" element={<PermissionsPage />} />
               <Route path="ai" element={<AIPage />} />

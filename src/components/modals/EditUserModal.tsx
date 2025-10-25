@@ -15,7 +15,6 @@ interface EditUserModalProps {
     middle_name: string;
     last_name: string;
     email: string;
-    role_title?: string | null;
   }) => Promise<void>;
   user: UserResponse | null;
   updating: boolean;
@@ -33,7 +32,6 @@ export function EditUserModal({
     middle_name: '',
     last_name: '',
     email: '',
-    role_title: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -44,7 +42,6 @@ export function EditUserModal({
         middle_name: user.middle_name,
         last_name: user.last_name,
         email: user.email,
-        role_title: user.role_title || '',
       });
     }
   }, [user]);
@@ -93,7 +90,6 @@ export function EditUserModal({
       middle_name: formData.middle_name,
       last_name: formData.last_name,
       email: formData.email,
-      role_title: formData.role_title || undefined,
     });
   };
 
@@ -192,18 +188,6 @@ export function EditUserModal({
                   {errors.email}
                 </p>
               )}
-            </div>
-
-            {/* Job Title */}
-            <div className="space-y-2">
-              <Label htmlFor="edit-role-title" className="text-sm font-medium">Job Title</Label>
-              <Input
-                id="edit-role-title"
-                value={formData.role_title}
-                onChange={(e) => setFormData({ ...formData, role_title: e.target.value })}
-                placeholder="e.g. Project Manager, Developer"
-                className="h-9"
-              />
             </div>
           </div>
 

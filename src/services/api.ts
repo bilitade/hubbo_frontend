@@ -29,9 +29,6 @@ import type {
   FileListResponse,
   FileUploadResponse,
   FileDeleteResponse,
-  ProfileResponse,
-  ProfileUpdate,
-  ProfileDisable,
   IdeaResponse,
   IdeaCreate,
   IdeaUpdate,
@@ -433,39 +430,6 @@ class ApiClient {
     const response = await this.client.get<FileListResponse>('/api/v1/files/admin/list', {
       params: { user_id: userId, category },
     });
-    return response.data;
-  }
-
-  // Profiles
-  async listProfiles(skip = 0, limit = 100): Promise<ProfileResponse[]> {
-    const response = await this.client.get<ProfileResponse[]>('/api/v1/profiles/', {
-      params: { skip, limit },
-    });
-    return response.data;
-  }
-
-  async getMyProfile(): Promise<ProfileResponse> {
-    const response = await this.client.get<ProfileResponse>('/api/v1/profiles/me');
-    return response.data;
-  }
-
-  async getProfile(profileId: string): Promise<ProfileResponse> {
-    const response = await this.client.get<ProfileResponse>(`/api/v1/profiles/${profileId}`);
-    return response.data;
-  }
-
-  async updateProfile(profileId: string, data: ProfileUpdate): Promise<ProfileResponse> {
-    const response = await this.client.patch<ProfileResponse>(`/api/v1/profiles/${profileId}`, data);
-    return response.data;
-  }
-
-  async disableProfile(profileId: string, data: ProfileDisable): Promise<ProfileResponse> {
-    const response = await this.client.post<ProfileResponse>(`/api/v1/profiles/${profileId}/disable`, data);
-    return response.data;
-  }
-
-  async enableProfile(profileId: string): Promise<ProfileResponse> {
-    const response = await this.client.post<ProfileResponse>(`/api/v1/profiles/${profileId}/enable`);
     return response.data;
   }
 

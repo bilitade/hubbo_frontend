@@ -16,7 +16,6 @@ interface CreateUserModalProps {
     first_name: string;
     middle_name: string;
     last_name: string;
-    role_title?: string | null;
   }) => Promise<void>;
   creating: boolean;
 }
@@ -33,7 +32,6 @@ export function CreateUserModal({
     first_name: '',
     middle_name: '',
     last_name: '',
-    role_title: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -92,7 +90,6 @@ export function CreateUserModal({
       first_name: formData.first_name,
       middle_name: formData.middle_name,
       last_name: formData.last_name,
-      role_title: formData.role_title || undefined,
     });
     setFormData({
       email: '',
@@ -100,7 +97,6 @@ export function CreateUserModal({
       first_name: '',
       middle_name: '',
       last_name: '',
-      role_title: '',
     });
     setShowPassword(false);
   };
@@ -113,7 +109,6 @@ export function CreateUserModal({
       first_name: '',
       middle_name: '',
       last_name: '',
-      role_title: '',
     });
     setShowPassword(false);
     setErrors({});
@@ -300,18 +295,6 @@ export function CreateUserModal({
                   </span>
                 </div>
               )}
-            </div>
-
-            {/* Job Title */}
-            <div className="space-y-2">
-              <Label htmlFor="role-title" className="text-sm font-medium">Job Title</Label>
-              <Input
-                id="role-title"
-                value={formData.role_title}
-                onChange={(e) => setFormData({ ...formData, role_title: e.target.value })}
-                placeholder="e.g. Project Manager, Developer"
-                className="h-9"
-              />
             </div>
           </div>
 

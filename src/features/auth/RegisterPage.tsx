@@ -16,7 +16,6 @@ export function RegisterPage() {
     first_name: '',
     middle_name: '',
     last_name: '',
-    role_title: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -222,21 +221,6 @@ export function RegisterPage() {
                     {fieldErrors.last_name}
                   </p>
                 )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="role_title" className="text-sm font-medium text-gray-700">
-                  Role Title <span className="text-gray-400">(Optional)</span>
-                </Label>
-                <Input
-                  id="role_title"
-                  name="role_title"
-                  placeholder="e.g., Software Engineer, Product Manager"
-                  value={formData.role_title}
-                  onChange={handleChange}
-                  disabled={loading}
-                  className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
-                />
               </div>
               
               <div className="space-y-2">

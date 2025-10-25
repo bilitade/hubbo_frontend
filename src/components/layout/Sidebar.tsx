@@ -6,7 +6,6 @@ import {
   CheckSquare, 
   FlaskConical, 
   Users, 
-  UserCircle, 
   Shield, 
   Key, 
   Brain, 
@@ -75,13 +74,6 @@ const navItems: NavItem[] = [
     label: 'Users', 
     exact: false,
     permission: 'users:view',
-  },
-  { 
-    to: '/dashboard/profiles', 
-    icon: UserCircle, 
-    label: 'Profiles', 
-    exact: false,
-    permission: 'profiles:view',
   },
   { 
     to: '/dashboard/roles', 
