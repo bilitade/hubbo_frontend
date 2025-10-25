@@ -53,7 +53,7 @@ export function ProjectProgressPage() {
     {
       id: 'unassigned',
       title: 'Unassigned',
-      tasks: tasks.filter(t => !t.assigned_to && t.status !== 'done' && t.status !== 'completed'),
+      tasks: tasks.filter(t => t.status === 'unassigned'),
       icon: AlertCircle,
       bgColor: 'bg-gray-50 dark:bg-gray-900',
       iconColor: 'text-gray-600',
@@ -61,7 +61,7 @@ export function ProjectProgressPage() {
     {
       id: 'in_progress',
       title: 'In Progress',
-      tasks: tasks.filter(t => t.assigned_to && (t.status === 'in_progress' || t.status === 'todo')),
+      tasks: tasks.filter(t => t.status === 'in_progress'),
       icon: Clock,
       bgColor: 'bg-blue-50 dark:bg-blue-950',
       iconColor: 'text-blue-600',
@@ -69,7 +69,7 @@ export function ProjectProgressPage() {
     {
       id: 'done',
       title: 'Done',
-      tasks: tasks.filter(t => t.status === 'done' || t.status === 'completed'),
+      tasks: tasks.filter(t => t.status === 'done'),
       icon: CheckSquare,
       bgColor: 'bg-green-50 dark:bg-green-950',
       iconColor: 'text-green-600',
@@ -78,13 +78,9 @@ export function ProjectProgressPage() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      'todo': 'bg-gray-100 text-gray-700',
+      'unassigned': 'bg-gray-100 text-gray-700',
       'in_progress': 'bg-blue-100 text-blue-700',
-      'under_review': 'bg-yellow-100 text-yellow-700',
-      'completed': 'bg-green-100 text-green-700',
       'done': 'bg-green-100 text-green-700',
-      'on_hold': 'bg-red-100 text-red-700',
-      'blocked': 'bg-red-100 text-red-700',
     };
     return colors[status] || 'bg-gray-100 text-gray-700';
   };
@@ -162,7 +158,7 @@ export function ProjectProgressPage() {
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <div className="text-2xl font-bold text-gray-600">
-                {tasks.filter(t => !t.assigned_to && t.status !== 'done').length}
+                {tasks.filter(t => t.status === 'unassigned').length}
               </div>
             </CardContent>
           </Card>
@@ -172,7 +168,7 @@ export function ProjectProgressPage() {
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <div className="text-2xl font-bold text-blue-600">
-                {tasks.filter(t => t.assigned_to && (t.status === 'in_progress' || t.status === 'todo')).length}
+                {tasks.filter(t => t.status === 'in_progress').length}
               </div>
             </CardContent>
           </Card>
@@ -182,7 +178,7 @@ export function ProjectProgressPage() {
             </CardHeader>
             <CardContent className="p-4 pt-0">
               <div className="text-2xl font-bold text-green-600">
-                {tasks.filter(t => t.status === 'done' || t.status === 'completed').length}
+                {tasks.filter(t => t.status === 'done').length}
               </div>
             </CardContent>
           </Card>
