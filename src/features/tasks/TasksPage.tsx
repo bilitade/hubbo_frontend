@@ -73,10 +73,9 @@ export function TasksPage() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
+      'unassigned': 'bg-gray-100 text-gray-700',
       'in_progress': 'bg-blue-100 text-blue-700',
-      'completed': 'bg-green-100 text-green-700',
-      'blocked': 'bg-red-100 text-red-700',
-      'cancelled': 'bg-gray-100 text-gray-700',
+      'done': 'bg-green-100 text-green-700',
     };
     return colors[status] || 'bg-gray-100 text-gray-700';
   };
@@ -277,6 +276,12 @@ export function TasksPage() {
       {/* Task Summary */}
       {tasks.length > 0 && (
         <div className="grid grid-cols-4 gap-4">
+          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+            <p className="text-xs text-muted-foreground mb-1">Unassigned</p>
+            <p className="text-2xl font-bold text-gray-600">
+              {tasks.filter(t => t.status === 'unassigned').length}
+            </p>
+          </div>
           <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <p className="text-xs text-muted-foreground mb-1">In Progress</p>
             <p className="text-2xl font-bold text-blue-600">
@@ -284,15 +289,9 @@ export function TasksPage() {
             </p>
           </div>
           <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
-            <p className="text-xs text-muted-foreground mb-1">Completed</p>
+            <p className="text-xs text-muted-foreground mb-1">Done</p>
             <p className="text-2xl font-bold text-green-600">
-              {tasks.filter(t => t.status === 'completed').length}
-            </p>
-          </div>
-          <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <p className="text-xs text-muted-foreground mb-1">Blocked</p>
-            <p className="text-2xl font-bold text-red-600">
-              {tasks.filter(t => t.status === 'blocked').length}
+              {tasks.filter(t => t.status === 'done').length}
             </p>
           </div>
           <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">

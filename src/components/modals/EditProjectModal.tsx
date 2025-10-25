@@ -146,15 +146,11 @@ export function EditProjectModal({ project, open, onOpenChange, onSuccess, onDel
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      'inbox': 'bg-gray-100 text-gray-700',
-      'in_progress': 'bg-blue-100 text-blue-700',
-      'under_review': 'bg-yellow-100 text-yellow-700',
-      'completed': 'bg-green-100 text-green-700',
-      'on_hold': 'bg-red-100 text-red-700',
       'planning': 'bg-purple-100 text-purple-700',
-      'todo': 'bg-gray-100 text-gray-700',
+      'not_started': 'bg-gray-100 text-gray-700',
+      'in_progress': 'bg-blue-100 text-blue-700',
       'done': 'bg-green-100 text-green-700',
-      'blocked': 'bg-red-100 text-red-700',
+      'unassigned': 'bg-gray-100 text-gray-700',
     };
     return colors[status] || 'bg-gray-100 text-gray-700';
   };
@@ -325,10 +321,9 @@ export function EditProjectModal({ project, open, onOpenChange, onSuccess, onDel
                     className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   >
                     <option value="planning">Planning</option>
+                    <option value="not_started">Not Started</option>
                     <option value="in_progress">In Progress</option>
-                    <option value="under_review">Under Review</option>
-                    <option value="on_hold">On Hold</option>
-                    <option value="completed">Completed</option>
+                    <option value="done">Done</option>
                   </select>
                 </div>
 

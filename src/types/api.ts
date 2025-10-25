@@ -305,6 +305,12 @@ export interface ProjectResponse {
   is_archived: boolean;
   created_at: string;
   updated_at: string;
+  // Task statistics
+  progress_percentage?: number | null;
+  tasks_count?: number | null;
+  completed_tasks_count?: number | null;
+  unassigned_tasks_count?: number | null;
+  in_progress_tasks_count?: number | null;
 }
 
 export interface ProjectCreate {
