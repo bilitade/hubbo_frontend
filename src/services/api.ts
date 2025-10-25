@@ -619,6 +619,99 @@ class ApiClient {
     return response.data;
   }
 
+  // AI Chat (Guru) - Modular chat system
+  async createChat(data: { title: string; description?: string }): Promise<any> {
+    const response = await this.client.post('/api/v1/chat/chats', data);
+    return response.data;
+  }
+
+  async listChats(includeArchived = false, limit = 50): Promise<any> {
+    const response = await this.client.get('/api/v1/chat/chats', {
+      params: { include_archived: includeArchived, limit },
+    });
+    return response.data;
+  }
+
+  async getChat(chatId: string): Promise<any> {
+    const response = await this.client.get(`/api/v1/chat/chats/${chatId}`);
+    return response.data;
+  }
+
+  async updateChat(chatId: string, data: {
+    title?: string;
+    description?: string;
+    is_archived?: boolean;
+    is_pinned?: boolean;
+  }): Promise<any> {
+    const response = await this.client.patch(`/api/v1/chat/chats/${chatId}`, data);
+    return response.data;
+  }
+
+  async deleteChat(chatId: string): Promise<void> {
+    await this.client.delete(`/api/v1/chat/chats/${chatId}`);
+  }
+
+  async createChatThread(data: {
+    chat_id: string;
+    title?: string;
+    context?: Record<string, any>;
+    system_prompt?: string;
+  }): Promise<any> {
+    const response = await this.client.post('/api/v1/chat/threads', data);
+    return response.data;
+  }
+
+  async listChatThreads(chatId: string, includeInactive = false): Promise<any> {
+    const response = await this.client.get(`/api/v1/chat/chats/${chatId}/threads`, {
+      params: { include_inactive: includeInactive },
+    });
+    return response.data;
+  }
+
+  async getChatThread(threadId: string): Promise<any> {
+    const response = await this.client.get(`/api/v1/chat/threads/${threadId}`);
+    return response.data;
+  }
+
+  async updateChatThread(threadId: string, data: {
+    title?: string;
+    context?: Record<string, any>;
+    system_prompt?: string;
+    is_active?: boolean;
+  }): Promise<any> {
+    const response = await this.client.patch(`/api/v1/chat/threads/${threadId}`, data);
+    return response.data;
+  }
+
+  async getChatMessages(threadId: string, limit = 100): Promise<any> {
+    const response = await this.client.get(`/api/v1/chat/threads/${threadId}/messages`, {
+      params: { limit },
+    });
+    return response.data;
+  }
+
+  async sendChatMessage(data: {
+    thread_id: string;
+    message: string;
+    include_project_context?: boolean;
+    include_task_context?: boolean;
+    project_id?: string;
+    task_id?: string;
+  }): Promise<any> {
+    const response = await this.client.post('/api/v1/chat/assistant/chat', data);
+    return response.data;
+  }
+
+  async quickChat(data: {
+    chat_id: string;
+    message: string;
+    context?: Record<string, any>;
+    system_prompt?: string;
+  }): Promise<any> {
+    const response = await this.client.post('/api/v1/chat/assistant/quick-chat', data);
+    return response.data;
+  }
+
   // Health Check
   async healthCheck(): Promise<any> {
     const response = await this.client.get('/health');

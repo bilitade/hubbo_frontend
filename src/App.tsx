@@ -13,6 +13,7 @@ import { UsersPage } from './features/users/UsersPage';
 import { RolesPage } from './features/roles/RolesPage';
 import { PermissionsPage } from './features/permissions/PermissionsPage';
 import { AIPage } from './features/ai/AIPage';
+import { HubboChat } from './features/chat/GuruChat';
 import { FilesPage } from './features/files/FilesPage';
 import { IdeasPage } from './features/ideas/IdeasPage';
 import { ProjectsPage } from './features/projects/ProjectsPage';
@@ -52,6 +53,7 @@ function App() {
               <Route path="roles" element={<RolesPage />} />
               <Route path="permissions" element={<PermissionsPage />} />
               <Route path="ai" element={<AIPage />} />
+              <Route path="guru" element={<HubboChat />} />
               <Route path="files" element={<FilesPage />} />
             </Route>
 

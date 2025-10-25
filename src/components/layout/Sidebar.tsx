@@ -8,7 +8,8 @@ import {
   Users, 
   Shield, 
   Key, 
-  Brain, 
+  Brain,
+  Bot,
   FileText,
   ChevronLeft,
   ChevronRight
@@ -93,6 +94,13 @@ const navItems: NavItem[] = [
     to: '/dashboard/ai', 
     icon: Brain, 
     label: 'AI Assistant', 
+    exact: false,
+    permission: 'ai:use',
+  },
+  { 
+    to: '/dashboard/guru', 
+    icon: Bot, 
+    label: 'Hubbo Chat', 
     exact: false,
     permission: 'ai:use',
   },
