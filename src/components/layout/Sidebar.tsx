@@ -51,28 +51,28 @@ const navItems: NavItem[] = [
     icon: Lightbulb, 
     label: 'Ideas', 
     exact: false,
-    permission: 'ideas:view',
+    permissions: ['ideas:view', 'ideas:view_own'],
   },
   { 
     to: '/dashboard/projects', 
     icon: FolderKanban, 
     label: 'Projects', 
     exact: false,
-    permission: 'projects:view',
+    permissions: ['projects:view', 'projects:view_own'],
   },
   { 
     to: '/dashboard/tasks', 
     icon: CheckSquare, 
     label: 'Tasks', 
     exact: false,
-    permission: 'tasks:view',
+    permissions: ['tasks:view', 'tasks:view_own'],
   },
   { 
     to: '/dashboard/experiments', 
     icon: FlaskConical, 
     label: 'Experiments', 
     exact: false,
-    permission: 'experiments:view',
+    permissions: ['experiments:view', 'experiments:view_own'],
   },
   
   // Analytics & Monitoring
@@ -81,21 +81,21 @@ const navItems: NavItem[] = [
     icon: BarChart3, 
     label: 'Reports', 
     exact: false,
-    // Everyone can view reports
+    permissions: ['reports:view', 'system:view_reports'],
   },
   { 
     to: '/dashboard/audit-logs', 
     icon: Activity, 
     label: 'Audit Logs', 
     exact: false,
-    // Everyone can view audit logs
+    permission: 'system:view_audit_logs',
   },
   { 
     to: '/dashboard/llm-logs', 
     icon: Zap, 
     label: 'LLM Usage', 
     exact: false,
-    // Everyone can view LLM logs
+    permission: 'system:view_llm_logs',
   },
   
   // AI Tools
@@ -104,14 +104,14 @@ const navItems: NavItem[] = [
     icon: Brain, 
     label: 'Hubbo Chat', 
     exact: false,
-    permission: 'ai:use',
+    permissions: ['ai:use', 'ai:chat'],
   },
   { 
     to: '/dashboard/knowledge-base', 
     icon: BookOpen, 
     label: 'Knowledge Base', 
     exact: false,
-    // Everyone can access KB for now
+    permissions: ['kb:view', 'kb:search'],
   },
   
   // File Management
@@ -120,7 +120,7 @@ const navItems: NavItem[] = [
     icon: FileText, 
     label: 'Documents', 
     exact: false,
-    // Everyone can view documents
+    permissions: ['files:view', 'files:view_own'],
   },
   
   // Administration
