@@ -22,6 +22,8 @@ import { ProjectProgressPage } from './features/projects/ProjectProgressPage';
 import { TasksPage } from './features/tasks/TasksPage';
 import { ExperimentsPage } from './features/experiments/ExperimentsPage';
 import KnowledgeBase from './features/knowledge-base/KnowledgeBase';
+import { AuditLogsPage } from './features/admin/AuditLogsPage';
+import { LLMLogsPage } from './features/admin/LLMLogsPage';
 
 function App() {
   return (
@@ -55,6 +57,8 @@ function App() {
               <Route path="roles" element={<RolesPage />} />
               <Route path="permissions" element={<PermissionsPage />} />
               <Route path="reports" element={<ReportsPage />} />
+              <Route path="audit-logs" element={<AuditLogsPage />} />
+              <Route path="llm-logs" element={<LLMLogsPage />} />
               <Route path="hubbochat" element={<HubboChat />} />
               <Route path="knowledge-base" element={<KnowledgeBase />} />
               <Route path="documents" element={<DocumentsPage />} />

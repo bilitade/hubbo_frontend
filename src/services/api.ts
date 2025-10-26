@@ -935,6 +935,146 @@ class ApiClient {
     return response.data;
   }
 
+  // System Settings
+  async getSystemSettings(): Promise<any> {
+    const response = await this.client.get('/api/v1/settings/');
+    return response.data;
+  }
+
+  async getPublicSystemSettings(): Promise<any> {
+    const response = await this.client.get('/api/v1/settings/public');
+    return response.data;
+  }
+
+  async updateSystemSettings(data: any): Promise<any> {
+    const response = await this.client.patch('/api/v1/settings/', data);
+    return response.data;
+  }
+
+  async resetSystemSettings(): Promise<void> {
+    await this.client.delete('/api/v1/settings/');
+  }
+
+  // Audit Logs
+  async listAuditLogs(params?: {
+    skip?: number;
+    limit?: number;
+    user_id?: string;
+    action?: string;
+    resource_type?: string;
+    success?: boolean;
+  }): Promise<any> {
+    const response = await this.client.get('/api/v1/audit-logs/', { params });
+    return response.data;
+  }
+
+  async getAuditStats(days = 30): Promise<any> {
+    const response = await this.client.get('/api/v1/audit-logs/stats', { params: { days } });
+    return response.data;
+  }
+
+  async getMyActivity(skip = 0, limit = 50): Promise<any> {
+    const response = await this.client.get('/api/v1/audit-logs/my-activity', { params: { skip, limit } });
+    return response.data;
+  }
+
+  // LLM Logs
+  async listLLMLogs(params?: {
+    skip?: number;
+    limit?: number;
+    user_id?: string;
+    provider?: string;
+    model?: string;
+    success?: boolean;
+  }): Promise<any> {
+    const response = await this.client.get('/api/v1/llm-logs/', { params });
+    return response.data;
+  }
+
+  async getLLMStats(days = 30): Promise<any> {
+    const response = await this.client.get('/api/v1/llm-logs/stats', { params: { days } });
+    return response.data;
+  }
+
+  async getMyLLMUsage(skip = 0, limit = 50): Promise<any> {
+    const response = await this.client.get('/api/v1/llm-logs/my-usage', { params: { skip, limit } });
+    return response.data;
+  }
+
+  // Reports (CSV Downloads)
+  async downloadTasksReport(params?: {
+    status?: string;
+    project_id?: string;
+    start_date?: string;
+    end_date?: string;
+  }): Promise<void> {
+    const response = await this.client.get('/api/v1/reports/tasks/csv', {
+      params,
+      responseType: 'blob',
+    });
+    this._downloadBlob(response.data, `tasks_${Date.now()}.csv`);
+  }
+
+  async downloadProjectsReport(params?: {
+    status?: string;
+    backlog?: string;
+    start_date?: string;
+    end_date?: string;
+  }): Promise<void> {
+    const response = await this.client.get('/api/v1/reports/projects/csv', {
+      params,
+      responseType: 'blob',
+    });
+    this._downloadBlob(response.data, `projects_${Date.now()}.csv`);
+  }
+
+  async downloadIdeasReport(params?: {
+    status?: string;
+    start_date?: string;
+    end_date?: string;
+  }): Promise<void> {
+    const response = await this.client.get('/api/v1/reports/ideas/csv', {
+      params,
+      responseType: 'blob',
+    });
+    this._downloadBlob(response.data, `ideas_${Date.now()}.csv`);
+  }
+
+  async downloadUserActivityReport(days = 30): Promise<void> {
+    const response = await this.client.get('/api/v1/reports/user-activity/csv', {
+      params: { days },
+      responseType: 'blob',
+    });
+    this._downloadBlob(response.data, `user_activity_${Date.now()}.csv`);
+  }
+
+  async downloadLLMUsageReport(days = 30): Promise<void> {
+    const response = await this.client.get('/api/v1/reports/llm-usage/csv', {
+      params: { days },
+      responseType: 'blob',
+    });
+    this._downloadBlob(response.data, `llm_usage_${Date.now()}.csv`);
+  }
+
+  async downloadSummaryReport(days = 30): Promise<void> {
+    const response = await this.client.get('/api/v1/reports/summary/csv', {
+      params: { days },
+      responseType: 'blob',
+    });
+    this._downloadBlob(response.data, `summary_report_${Date.now()}.csv`);
+  }
+
+  private _downloadBlob(blob: Blob, filename: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  }
+
   // Health Check
   async healthCheck(): Promise<any> {
     const response = await this.client.get('/health');

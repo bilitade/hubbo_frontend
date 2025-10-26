@@ -14,7 +14,9 @@ import {
   ChevronLeft,
   ChevronRight,
   BookOpen,
-  Settings
+  Settings,
+  Activity,
+  Zap
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { usePermissions } from '../../hooks/usePermissions';
@@ -36,6 +38,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
+  // Core Workflow
   { 
     to: '/dashboard', 
     icon: LayoutDashboard, 
@@ -71,6 +74,56 @@ const navItems: NavItem[] = [
     exact: false,
     permission: 'experiments:view',
   },
+  
+  // Analytics & Monitoring
+  { 
+    to: '/dashboard/reports', 
+    icon: BarChart3, 
+    label: 'Reports', 
+    exact: false,
+    // Everyone can view reports
+  },
+  { 
+    to: '/dashboard/audit-logs', 
+    icon: Activity, 
+    label: 'Audit Logs', 
+    exact: false,
+    // Everyone can view audit logs
+  },
+  { 
+    to: '/dashboard/llm-logs', 
+    icon: Zap, 
+    label: 'LLM Usage', 
+    exact: false,
+    // Everyone can view LLM logs
+  },
+  
+  // AI Tools
+  { 
+    to: '/dashboard/hubbochat', 
+    icon: Brain, 
+    label: 'Hubbo Chat', 
+    exact: false,
+    permission: 'ai:use',
+  },
+  { 
+    to: '/dashboard/knowledge-base', 
+    icon: BookOpen, 
+    label: 'Knowledge Base', 
+    exact: false,
+    // Everyone can access KB for now
+  },
+  
+  // File Management
+  { 
+    to: '/dashboard/documents', 
+    icon: FileText, 
+    label: 'Documents', 
+    exact: false,
+    // Everyone can view documents
+  },
+  
+  // Administration
   { 
     to: '/dashboard/users', 
     icon: Users, 
@@ -92,34 +145,8 @@ const navItems: NavItem[] = [
     exact: false,
     permission: 'permissions:view',
   },
-  { 
-    to: '/dashboard/reports', 
-    icon: BarChart3, 
-    label: 'Reports', 
-    exact: false,
-    // Everyone can view reports
-  },
-  { 
-    to: '/dashboard/hubbochat', 
-    icon: Brain, 
-    label: 'Hubbo Chat', 
-    exact: false,
-    permission: 'ai:use',
-  },
-  { 
-    to: '/dashboard/knowledge-base', 
-    icon: BookOpen, 
-    label: 'Knowledge Base', 
-    exact: false,
-    // Everyone can access KB for now
-  },
-  { 
-    to: '/dashboard/documents', 
-    icon: FileText, 
-    label: 'Documents', 
-    exact: false,
-    // Everyone can view documents
-  },
+  
+  // System
   { 
     to: '/dashboard/settings', 
     icon: Settings, 
