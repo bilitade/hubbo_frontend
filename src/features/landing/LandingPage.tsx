@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Brain, CheckCircle, Droplets, Lightbulb, Target, TrendingUp, Zap, Shield, BarChart3, Sparkles } from 'lucide-react';
+import { ArrowRight, Brain, CheckCircle, Droplets, Lightbulb, Target, TrendingUp, Zap, Shield, BarChart3, Sparkles, Sun, Moon } from 'lucide-react';
 import { Button } from '../../components/ui/button';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export function LandingPage() {
   const navigate = useNavigate();
+  const { toggleTheme, actualTheme } = useTheme();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
@@ -23,6 +25,21 @@ export function LandingPage() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              {/* Theme Toggle */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                className="relative w-10 h-10 rounded-full hover:bg-primary/10 transition-all duration-300"
+                aria-label="Toggle theme"
+              >
+                {actualTheme === 'dark' ? (
+                  <Sun className="w-5 h-5 text-primary animate-in spin-in-180 duration-300" />
+                ) : (
+                  <Moon className="w-5 h-5 text-primary animate-in spin-in-180 duration-300" />
+                )}
+              </Button>
+              
               <Button variant="outline" onClick={() => navigate('/login')} className="border-primary/30 hover:border-primary hover:bg-primary/5">
                 Sign In
               </Button>

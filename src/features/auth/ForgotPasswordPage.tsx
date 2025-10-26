@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiClient } from '../../services/api';
+import { useTheme } from '../../contexts/ThemeContext';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../components/ui/card';
 import { Alert, AlertDescription } from '../../components/ui/alert';
-import { CheckCircle, Droplets, ArrowLeft, Mail } from 'lucide-react';
+import { CheckCircle, Droplets, ArrowLeft, Mail, Sun, Moon } from 'lucide-react';
 
 export function ForgotPasswordPage() {
+  const { toggleTheme, actualTheme } = useTheme();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -41,8 +43,8 @@ export function ForgotPasswordPage() {
       </div>
 
       <div className="relative w-full max-w-md z-10">
-        {/* Back Button */}
-        <div className="mb-6">
+        {/* Back Button & Theme Toggle */}
+        <div className="mb-6 flex items-center justify-between">
           <Link 
             to="/login" 
             className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors group"
@@ -50,6 +52,20 @@ export function ForgotPasswordPage() {
             <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
             Back to Login
           </Link>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className="w-9 h-9 rounded-full hover:bg-primary/10 transition-all duration-300"
+            aria-label="Toggle theme"
+          >
+            {actualTheme === 'dark' ? (
+              <Sun className="w-4 h-4 text-primary" />
+            ) : (
+              <Moon className="w-4 h-4 text-primary" />
+            )}
+          </Button>
         </div>
 
         <Card className="border-2 border-border shadow-brand-lg backdrop-blur-sm bg-white/95 dark:bg-gray-900/95">
