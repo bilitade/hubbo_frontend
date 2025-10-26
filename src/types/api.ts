@@ -400,6 +400,15 @@ export interface TaskAttachmentResponse {
   created_at: string;
 }
 
+export interface TaskActivityLogResponse {
+  id: string;
+  task_id: string;
+  user_id: string;
+  action: string;
+  details?: string | null;
+  created_at: string;
+}
+
 export interface TaskResponse {
   id: string;
   idea_id?: string | null;

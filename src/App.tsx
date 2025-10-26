@@ -15,6 +15,7 @@ import { PermissionsPage } from './features/permissions/PermissionsPage';
 import { ReportsPage } from './features/reports/ReportsPage';
 import { HubboChat } from './features/chat/HubboChat';
 import { DocumentsPage } from './features/documents/DocumentsPage';
+import { SettingsPage } from './features/settings/SettingsPage';
 import { IdeasPage } from './features/ideas/IdeasPage';
 import { ProjectsPage } from './features/projects/ProjectsPage';
 import { ProjectProgressPage } from './features/projects/ProjectProgressPage';
@@ -54,9 +55,10 @@ function App() {
               <Route path="roles" element={<RolesPage />} />
               <Route path="permissions" element={<PermissionsPage />} />
               <Route path="reports" element={<ReportsPage />} />
-              <Route path="guru" element={<HubboChat />} />
+              <Route path="hubbochat" element={<HubboChat />} />
               <Route path="knowledge-base" element={<KnowledgeBase />} />
               <Route path="documents" element={<DocumentsPage />} />
+              <Route path="settings" element={<SettingsPage />} />
             </Route>
 
             {/* Catch all */}

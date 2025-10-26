@@ -8,12 +8,13 @@ import {
   Users, 
   Shield, 
   Key, 
+  BarChart3,
   Brain,
-  Bot,
   FileText,
   ChevronLeft,
   ChevronRight,
-  BookOpen
+  BookOpen,
+  Settings
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { usePermissions } from '../../hooks/usePermissions';
@@ -93,14 +94,14 @@ const navItems: NavItem[] = [
   },
   { 
     to: '/dashboard/reports', 
-    icon: Brain, 
+    icon: BarChart3, 
     label: 'Reports', 
     exact: false,
     // Everyone can view reports
   },
   { 
-    to: '/dashboard/guru', 
-    icon: Bot, 
+    to: '/dashboard/hubbochat', 
+    icon: Brain, 
     label: 'Hubbo Chat', 
     exact: false,
     permission: 'ai:use',
@@ -118,6 +119,13 @@ const navItems: NavItem[] = [
     label: 'Documents', 
     exact: false,
     // Everyone can view documents
+  },
+  { 
+    to: '/dashboard/settings', 
+    icon: Settings, 
+    label: 'Settings', 
+    exact: false,
+    // Everyone can access settings
   },
 ];
 
