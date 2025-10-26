@@ -12,14 +12,15 @@ import { DashboardPage } from './features/users/DashboardPage';
 import { UsersPage } from './features/users/UsersPage';
 import { RolesPage } from './features/roles/RolesPage';
 import { PermissionsPage } from './features/permissions/PermissionsPage';
-import { AIPage } from './features/ai/AIPage';
+import { ReportsPage } from './features/reports/ReportsPage';
 import { HubboChat } from './features/chat/HubboChat';
-import { FilesPage } from './features/files/FilesPage';
+import { DocumentsPage } from './features/documents/DocumentsPage';
 import { IdeasPage } from './features/ideas/IdeasPage';
 import { ProjectsPage } from './features/projects/ProjectsPage';
 import { ProjectProgressPage } from './features/projects/ProjectProgressPage';
 import { TasksPage } from './features/tasks/TasksPage';
 import { ExperimentsPage } from './features/experiments/ExperimentsPage';
+import KnowledgeBase from './features/knowledge-base/KnowledgeBase';
 
 function App() {
   return (
@@ -52,9 +53,10 @@ function App() {
               <Route path="users" element={<UsersPage />} />
               <Route path="roles" element={<RolesPage />} />
               <Route path="permissions" element={<PermissionsPage />} />
-              <Route path="ai" element={<AIPage />} />
+              <Route path="reports" element={<ReportsPage />} />
               <Route path="guru" element={<HubboChat />} />
-              <Route path="files" element={<FilesPage />} />
+              <Route path="knowledge-base" element={<KnowledgeBase />} />
+              <Route path="documents" element={<DocumentsPage />} />
             </Route>
 
             {/* Catch all */}

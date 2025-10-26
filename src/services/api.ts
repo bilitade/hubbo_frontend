@@ -80,26 +80,46 @@ class ApiClient {
       (error) => Promise.reject(error)
     );
 
-    // Response interceptor to handle token refresh
+    // Response interceptor to handle token refresh and session expiration
     this.client.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
         const originalRequest = error.config as any;
 
+        // Handle 401 Unauthorized errors
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
+
+          // Skip auto-refresh for login and register endpoints
+          const url = originalRequest.url || '';
+          if (url.includes('/auth/login') || url.includes('/users/register')) {
+            return Promise.reject(error);
+          }
 
           try {
             const newToken = await this.refreshToken();
             originalRequest.headers.Authorization = `Bearer ${newToken.access_token}`;
             return this.client(originalRequest);
           } catch (refreshError) {
+            // Session has expired - clear tokens and redirect to login
             this.clearTokens();
-            window.location.href = '/login';
+            
+            // Only redirect if we're not already on a public page
+            const currentPath = window.location.pathname;
+            const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/'];
+            if (!publicPaths.includes(currentPath)) {
+              // Store the current path to redirect back after login (optional)
+              sessionStorage.setItem('redirectAfterLogin', currentPath);
+              
+              // Redirect to login with a message
+              window.location.href = '/login?session_expired=true';
+            }
+            
             return Promise.reject(refreshError);
           }
         }
 
+        // Handle other error statuses
         return Promise.reject(error);
       }
     );
@@ -717,6 +737,171 @@ class ApiClient {
     system_prompt?: string;
   }): Promise<any> {
     const response = await this.client.post('/api/v1/chat/assistant/quick-chat', data);
+    return response.data;
+  }
+
+  // Streaming Chat (NEW)
+  async streamChatMessage(
+    threadId: string,
+    message: string,
+    onChunk: (chunk: string) => void,
+    onComplete: (messageId: string) => void,
+    onError: (error: string) => void,
+    useAgent: boolean = true
+  ): Promise<void> {
+    const token = this.getAccessToken();
+    const apiUrl = `${this.client.defaults.baseURL}/api/v1/chat/stream`;
+
+    console.log('🚀 Starting stream...', { threadId, message });
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          thread_id: threadId,
+          message: message,
+          use_agent: useAgent,
+        }),
+      });
+
+      console.log('✅ Stream response received:', response.status);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('No reader available');
+      }
+
+      let buffer = '';
+      let chunkCount = 0;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) {
+          console.log('✅ Stream complete. Total chunks:', chunkCount);
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const jsonStr = line.slice(6).trim();
+              if (!jsonStr) continue;
+              
+              const data = JSON.parse(jsonStr);
+              console.log('📦 SSE event:', data.type, data);
+              
+              if (data.type === 'content') {
+                chunkCount++;
+                console.log(`📨 Chunk #${chunkCount}:`, data.chunk);
+                onChunk(data.chunk);
+              } else if (data.type === 'done') {
+                console.log('✅ Stream done:', data.message_id);
+                onComplete(data.message_id);
+              } else if (data.type === 'error') {
+                console.error('❌ Stream error:', data.message);
+                onError(data.message);
+              } else if (data.type === 'user_message') {
+                console.log('👤 User message confirmed:', data.message_id);
+              }
+            } catch (e) {
+              console.error('❌ Error parsing SSE data:', e, 'Line:', line);
+            }
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error('❌ Stream failed:', error);
+      onError(error.message || 'Streaming failed');
+    }
+  }
+
+  // Knowledge Base
+  async uploadKBDocument(
+    file: File,
+    category = 'general',
+    description?: string,
+    tags?: string
+  ): Promise<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const params = new URLSearchParams();
+    params.append('category', category);
+    if (description) params.append('description', description);
+    if (tags) params.append('tags', tags);
+
+    const response = await this.client.post(
+      `/api/v1/knowledge-base/upload?${params.toString()}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  }
+
+  async listKBDocuments(params?: {
+    category?: string;
+    status?: string;
+    page?: number;
+    page_size?: number;
+  }): Promise<any> {
+    const response = await this.client.get('/api/v1/knowledge-base/documents', {
+      params,
+    });
+    return response.data;
+  }
+
+  async getKBDocument(documentId: string): Promise<any> {
+    const response = await this.client.get(`/api/v1/knowledge-base/documents/${documentId}`);
+    return response.data;
+  }
+
+  async updateKBDocument(
+    documentId: string,
+    data: { category?: string; description?: string; tags?: string }
+  ): Promise<any> {
+    const response = await this.client.patch(`/api/v1/knowledge-base/documents/${documentId}`, data);
+    return response.data;
+  }
+
+  async deleteKBDocument(documentId: string): Promise<void> {
+    await this.client.delete(`/api/v1/knowledge-base/documents/${documentId}`);
+  }
+
+  async searchKB(data: {
+    query: string;
+    k?: number;
+    category?: string;
+  }): Promise<any> {
+    const response = await this.client.post('/api/v1/knowledge-base/search', data);
+    return response.data;
+  }
+
+  async getKBStats(): Promise<any> {
+    const response = await this.client.get('/api/v1/knowledge-base/stats');
+    return response.data;
+  }
+
+  async reprocessKBDocument(documentId: string): Promise<any> {
+    const response = await this.client.post(`/api/v1/knowledge-base/reprocess/${documentId}`);
     return response.data;
   }
 

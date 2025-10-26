@@ -175,37 +175,44 @@ export function HubboChat() {
 
       let threadId = currentThread?.id;
 
-      // If no thread, create one
+      // If no thread, create one first
       if (!threadId) {
-        const response = await apiClient.quickChat({
+        const threadResponse = await apiClient.createChatThread({
           chat_id: chatToUse.id,
-          message: messageText,
+          title: 'Quick Chat',
         });
+        threadId = threadResponse.id;
+        setCurrentThread(threadResponse);
         
-        setCurrentThread(response.thread);
-        setMessages([response.user_message, response.assistant_message]);
-        await loadThreads(chatToUse.id);
-        
-        // If this is the first message, update the chat title
+        // Update chat title if it's the first message
         if (chatToUse.title === 'New Conversation') {
           const updatedTitle = messageText.length > 50 
             ? messageText.substring(0, 50) + '...' 
             : messageText;
           
           await apiClient.updateChat(chatToUse.id, { title: updatedTitle });
-          await loadChats(); // Refresh chat list with new title
+          await loadChats();
         }
-      } else {
-        // Send to existing thread
-        const response = await apiClient.sendChatMessage({
-          thread_id: threadId,
-          message: messageText,
-        });
-        
-        setMessages([...messages, response.user_message, response.assistant_message]);
       }
+
+      // Send message to thread
+      if (!threadId) {
+        throw new Error('Thread ID not found');
+      }
+      
+      const response = await apiClient.sendChatMessage({
+        thread_id: threadId,
+        message: messageText,
+      });
+      
+      setMessages(prev => [...prev, response.user_message, response.assistant_message]);
+      
+      // Reload threads to update counts
+      await loadThreads(chatToUse.id);
+
     } catch (err: any) {
       console.error('Failed to send message:', err);
+      alert('Failed to send message. Please try again.');
     } finally {
       setSending(false);
     }
@@ -558,7 +565,9 @@ export function HubboChat() {
                   ) : (
                     <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                   )}
-                  <p className="text-[10px] opacity-60 mt-1.5">{formatTime(message.created_at)}</p>
+                  <p className="text-[10px] opacity-60 mt-1.5">
+                    {formatTime(message.created_at)}
+                  </p>
                 </div>
                 {message.role === 'user' && (
                   <div className="h-7 w-7 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-sm">

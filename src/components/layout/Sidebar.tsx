@@ -12,7 +12,8 @@ import {
   Bot,
   FileText,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  BookOpen
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { usePermissions } from '../../hooks/usePermissions';
@@ -91,11 +92,11 @@ const navItems: NavItem[] = [
     permission: 'permissions:view',
   },
   { 
-    to: '/dashboard/ai', 
+    to: '/dashboard/reports', 
     icon: Brain, 
-    label: 'AI Assistant', 
+    label: 'Reports', 
     exact: false,
-    permission: 'ai:use',
+    // Everyone can view reports
   },
   { 
     to: '/dashboard/guru', 
@@ -105,11 +106,18 @@ const navItems: NavItem[] = [
     permission: 'ai:use',
   },
   { 
-    to: '/dashboard/files', 
-    icon: FileText, 
-    label: 'Files', 
+    to: '/dashboard/knowledge-base', 
+    icon: BookOpen, 
+    label: 'Knowledge Base', 
     exact: false,
-    permission: 'files:view',
+    // Everyone can access KB for now
+  },
+  { 
+    to: '/dashboard/documents', 
+    icon: FileText, 
+    label: 'Documents', 
+    exact: false,
+    // Everyone can view documents
   },
 ];
 

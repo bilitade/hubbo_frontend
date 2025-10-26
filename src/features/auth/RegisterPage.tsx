@@ -100,55 +100,56 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-br from-purple-400/20 to-blue-400/20 rounded-full blur-3xl"></div>
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-accent-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-900 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-primary/5 to-accent/5 rounded-full blur-3xl"></div>
       </div>
 
-      <div className="relative w-full max-w-lg">
-        {/* Back to landing page */}
+      <div className="relative w-full max-w-lg z-10">
+        {/* Back Button */}
         <div className="mb-6">
           <Link 
             to="/" 
-            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors group"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Hubbo
+            <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
+            Back to Home
           </Link>
         </div>
 
-        <Card className="w-full shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
-          <CardHeader className="space-y-4 text-center pb-8">
+        <Card className="border-2 border-border shadow-brand-lg backdrop-blur-sm bg-white/95 dark:bg-gray-900/95">
+          <CardHeader className="space-y-4 text-center pb-6">
             {/* Logo */}
             <div className="flex justify-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-                <Droplets className="w-8 h-8 text-white" />
+              <div className="w-16 h-16 bg-brand-gradient rounded-2xl flex items-center justify-center shadow-brand-lg">
+                <Droplets className="w-9 h-9 text-white" />
               </div>
             </div>
             
             <div className="space-y-2">
-              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Join Hubbo
+              <CardTitle className="text-3xl font-bold">
+                <span className="text-brand-gradient">Join Hubbo</span>
               </CardTitle>
-              <CardDescription className="text-lg text-gray-600">
+              <CardDescription className="text-base">
                 Start your journey from source to success
               </CardDescription>
             </div>
           </CardHeader>
 
           <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4">
               {error && (
-                <Alert variant="destructive" className="border-red-200 bg-red-50">
-                  <AlertDescription className="text-red-800">{error}</AlertDescription>
+                <Alert variant="destructive" className="border-destructive/50">
+                  <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="first_name" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="first_name" className="text-sm font-semibold">
                     First Name *
                   </Label>
                   <Input
@@ -159,13 +160,13 @@ export function RegisterPage() {
                     required
                     maxLength={100}
                     disabled={loading}
-                    className={`h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 ${
-                      fieldErrors.first_name ? 'border-red-500' : ''
+                    className={`h-11 border-2 focus:border-primary focus:ring-primary ${
+                      fieldErrors.first_name ? 'border-destructive' : ''
                     }`}
                     placeholder="John"
                   />
                   {fieldErrors.first_name && (
-                    <p className="text-xs text-red-500 flex items-center gap-1">
+                    <p className="text-xs text-destructive flex items-center gap-1">
                       <XCircle className="h-3 w-3" />
                       {fieldErrors.first_name}
                     </p>
@@ -173,7 +174,7 @@ export function RegisterPage() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="middle_name" className="text-sm font-medium text-gray-700">
+                  <Label htmlFor="middle_name" className="text-sm font-semibold">
                     Middle Name *
                   </Label>
                   <Input
@@ -184,13 +185,13 @@ export function RegisterPage() {
                     required
                     maxLength={100}
                     disabled={loading}
-                    className={`h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 ${
-                      fieldErrors.middle_name ? 'border-red-500' : ''
+                    className={`h-11 border-2 focus:border-primary focus:ring-primary ${
+                      fieldErrors.middle_name ? 'border-destructive' : ''
                     }`}
                     placeholder="Michael"
                   />
                   {fieldErrors.middle_name && (
-                    <p className="text-xs text-red-500 flex items-center gap-1">
+                    <p className="text-xs text-destructive flex items-center gap-1">
                       <XCircle className="h-3 w-3" />
                       {fieldErrors.middle_name}
                     </p>
@@ -199,7 +200,7 @@ export function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="last_name" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="last_name" className="text-sm font-semibold">
                   Last Name *
                 </Label>
                 <Input
@@ -210,13 +211,13 @@ export function RegisterPage() {
                   required
                   maxLength={100}
                   disabled={loading}
-                  className={`h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 ${
-                    fieldErrors.last_name ? 'border-red-500' : ''
+                  className={`h-11 border-2 focus:border-primary focus:ring-primary ${
+                    fieldErrors.last_name ? 'border-destructive' : ''
                   }`}
                   placeholder="Doe"
                 />
                 {fieldErrors.last_name && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
+                  <p className="text-xs text-destructive flex items-center gap-1">
                     <XCircle className="h-3 w-3" />
                     {fieldErrors.last_name}
                   </p>
@@ -224,24 +225,24 @@ export function RegisterPage() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="email" className="text-sm font-semibold">
                   Email Address *
                 </Label>
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="john.doe@example.com"
+                  placeholder="your.email@cbo.com"
                   value={formData.email}
                   onChange={handleChange}
                   required
                   disabled={loading}
-                  className={`h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 ${
-                    fieldErrors.email ? 'border-red-500' : ''
+                  className={`h-11 border-2 focus:border-primary focus:ring-primary ${
+                    fieldErrors.email ? 'border-destructive' : ''
                   }`}
                 />
                 {fieldErrors.email && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
+                  <p className="text-xs text-destructive flex items-center gap-1">
                     <XCircle className="h-3 w-3" />
                     {fieldErrors.email}
                   </p>
@@ -249,7 +250,7 @@ export function RegisterPage() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="password" className="text-sm font-semibold">
                   Password *
                 </Label>
                 <div className="relative">
@@ -261,17 +262,17 @@ export function RegisterPage() {
                     onChange={handleChange}
                     required
                     disabled={loading}
-                    className={`h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 pr-10 ${
-                      fieldErrors.password ? 'border-red-500' : ''
+                    className={`h-11 border-2 focus:border-primary focus:ring-primary pr-10 ${
+                      fieldErrors.password ? 'border-destructive' : ''
                     }`}
                     placeholder="Create a strong password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
                 
@@ -342,7 +343,7 @@ export function RegisterPage() {
                 )}
 
                 {fieldErrors.password && (
-                  <p className="text-xs text-red-500 flex items-center gap-1 mt-2">
+                  <p className="text-xs text-destructive flex items-center gap-1 mt-2">
                     <XCircle className="h-3 w-3" />
                     {fieldErrors.password}
                   </p>
@@ -350,15 +351,15 @@ export function RegisterPage() {
               </div>
             </CardContent>
             
-            <CardFooter className="flex flex-col space-y-6 pt-6">
-              <Button 
-                type="submit" 
-                className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200" 
+            <CardFooter className="flex flex-col space-y-4">
+              <Button
+                type="submit"
+                className="w-full h-11 bg-brand-gradient hover:bg-brand-gradient-hover shadow-brand text-base font-semibold"
                 disabled={loading}
               >
                 {loading ? (
-                  <div className="flex items-center">
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                     Creating account...
                   </div>
                 ) : (
@@ -366,11 +367,11 @@ export function RegisterPage() {
                 )}
               </Button>
               
-              <div className="text-center">
-                <span className="text-gray-600">Already have an account? </span>
-                <Link 
-                  to="/login" 
-                  className="text-blue-600 hover:text-blue-700 font-semibold hover:underline"
+              <div className="text-center text-sm">
+                <span className="text-muted-foreground">Already have an account? </span>
+                <Link
+                  to="/login"
+                  className="font-semibold text-primary hover:text-primary-600 transition-colors"
                 >
                   Sign in here
                 </Link>
@@ -378,6 +379,16 @@ export function RegisterPage() {
             </CardFooter>
           </form>
         </Card>
+
+        {/* CBO Branding */}
+        <div className="mt-6 text-center">
+          <p className="text-xs text-muted-foreground">
+            Powered by <span className="font-semibold text-foreground">Cooperative Bank of Oromia</span>
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            AI Foundry Team Management Platform
+          </p>
+        </div>
       </div>
     </div>
   );
