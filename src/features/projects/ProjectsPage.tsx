@@ -122,6 +122,9 @@ export function ProjectsPage() {
               <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">In Progress</th>
               <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Completion %</th>
               <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Status</th>
+              {showArchived && (
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider">Actions</th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -170,6 +173,21 @@ export function ProjectsPage() {
                       {project.status.replace('_', ' ')}
                     </Badge>
                   </td>
+                  {showArchived && (
+                    <td className="px-4 py-3 text-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleUnarchive(project.id);
+                        }}
+                      >
+                        <ArchiveRestore className="h-4 w-4 mr-1" />
+                        Unarchive
+                      </Button>
+                    </td>
+                  )}
                 </tr>
               );
             })}

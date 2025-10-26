@@ -527,8 +527,33 @@ export function HubboChat() {
                   }`}
                 >
                   {message.role === 'assistant' ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none text-sm">
-                      <ReactMarkdown>{message.content}</ReactMarkdown>
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <ReactMarkdown
+                        components={{
+                          h2: ({node, ...props}) => <h2 className="text-base font-semibold mt-3 mb-2 first:mt-0" {...props} />,
+                          h3: ({node, ...props}) => <h3 className="text-sm font-semibold mt-2 mb-1.5" {...props} />,
+                          ul: ({node, ...props}) => <ul className="list-disc list-inside space-y-1 my-2" {...props} />,
+                          ol: ({node, ...props}) => <ol className="list-decimal list-inside space-y-1 my-2" {...props} />,
+                          li: ({node, ...props}) => <li className="text-sm" {...props} />,
+                          p: ({node, ...props}) => <p className="text-sm my-2 leading-relaxed" {...props} />,
+                          strong: ({node, ...props}) => <strong className="font-semibold text-foreground" {...props} />,
+                          em: ({node, ...props}) => <em className="italic text-muted-foreground" {...props} />,
+                          code: ({node, ...props}) => <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono" {...props} />,
+                          table: ({node, ...props}) => (
+                            <div className="overflow-x-auto my-3">
+                              <table className="min-w-full divide-y divide-border text-xs" {...props} />
+                            </div>
+                          ),
+                          thead: ({node, ...props}) => <thead className="bg-muted/50" {...props} />,
+                          tbody: ({node, ...props}) => <tbody className="divide-y divide-border" {...props} />,
+                          tr: ({node, ...props}) => <tr className="hover:bg-muted/30 transition-colors" {...props} />,
+                          th: ({node, ...props}) => <th className="px-3 py-2 text-left font-medium" {...props} />,
+                          td: ({node, ...props}) => <td className="px-3 py-2" {...props} />,
+                          hr: ({node, ...props}) => <hr className="my-3 border-border" {...props} />,
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
                     </div>
                   ) : (
                     <p className="text-sm whitespace-pre-wrap">{message.content}</p>

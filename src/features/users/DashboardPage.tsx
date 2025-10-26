@@ -281,7 +281,7 @@ export function DashboardPage() {
       id: 'inbox',
       title: 'Ideas',
       subtitle: 'Capture & Explore',
-      items: ideas,
+      items: ideas.filter(i => !i.is_archived),
       icon: Lightbulb,
       bgColor: 'bg-gradient-to-br from-accent/5 to-accent/10 dark:from-accent-900/20 dark:to-accent-800/10',
       iconColor: 'text-accent',
@@ -291,7 +291,7 @@ export function DashboardPage() {
       id: 'business_innovation',
       title: 'Business',
       subtitle: 'Innovation Focus',
-      items: projects.filter(p => p.backlog === 'business_innovation' && p.status !== 'done'),
+      items: projects.filter(p => !p.is_archived && p.backlog === 'business_innovation' && p.status !== 'done'),
       icon: Zap,
       bgColor: 'bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary-900/20 dark:to-primary-800/10',
       iconColor: 'text-brand-primary',
@@ -301,7 +301,7 @@ export function DashboardPage() {
       id: 'engineering',
       title: 'Engineering',
       subtitle: 'Build & Develop',
-      items: projects.filter(p => p.backlog === 'engineering' && p.status !== 'done'),
+      items: projects.filter(p => !p.is_archived && p.backlog === 'engineering' && p.status !== 'done'),
       icon: FolderKanban,
       bgColor: 'bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary-800/20 dark:to-primary-900/10',
       iconColor: 'text-primary-700',
@@ -311,7 +311,7 @@ export function DashboardPage() {
       id: 'output_adoption',
       title: 'Outcomes',
       subtitle: 'Deliver & Adopt',
-      items: projects.filter(p => p.backlog === 'output_adoption' && p.status !== 'done'),
+      items: projects.filter(p => !p.is_archived && p.backlog === 'output_adoption' && p.status !== 'done'),
       icon: TrendingUp,
       bgColor: 'bg-gradient-to-br from-accent/10 to-primary/10 dark:from-accent-900/10 dark:to-primary-900/10',
       iconColor: 'text-accent-600',
@@ -321,7 +321,7 @@ export function DashboardPage() {
       id: 'completed',
       title: 'Completed',
       subtitle: 'Success Stories',
-      items: projects.filter(p => p.status === 'done'),
+      items: projects.filter(p => !p.is_archived && p.status === 'done'),
       icon: CheckCircle2,
       bgColor: 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/20',
       iconColor: 'text-green-600',
@@ -379,15 +379,15 @@ export function DashboardPage() {
           {/* Stats Cards */}
           <div className="flex gap-3">
             <div className="bg-primary/10 border border-primary/20 rounded-lg px-4 py-2 hover:scale-105 transition-transform">
-              <div className="font-bold text-lg sm:text-xl text-primary">{ideas.length}</div>
+              <div className="font-bold text-lg sm:text-xl text-primary">{ideas.filter(i => !i.is_archived).length}</div>
               <div className="text-muted-foreground text-[10px] sm:text-xs font-medium">Ideas</div>
             </div>
             <div className="bg-primary/10 border border-primary/20 rounded-lg px-4 py-2 hover:scale-105 transition-transform">
-              <div className="font-bold text-lg sm:text-xl text-primary">{projects.filter(p => p.status !== 'done').length}</div>
+              <div className="font-bold text-lg sm:text-xl text-primary">{projects.filter(p => !p.is_archived && p.status !== 'done').length}</div>
               <div className="text-muted-foreground text-[10px] sm:text-xs font-medium">Active</div>
             </div>
             <div className="bg-accent/10 border border-accent/20 rounded-lg px-4 py-2 hover:scale-105 transition-transform">
-              <div className="font-bold text-lg sm:text-xl text-accent">{projects.filter(p => p.status === 'done').length}</div>
+              <div className="font-bold text-lg sm:text-xl text-accent">{projects.filter(p => !p.is_archived && p.status === 'done').length}</div>
               <div className="text-muted-foreground text-[10px] sm:text-xs font-medium">Done</div>
             </div>
           </div>

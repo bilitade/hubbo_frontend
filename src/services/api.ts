@@ -436,7 +436,7 @@ class ApiClient {
   // Ideas
   async listIdeas(skip = 0, limit = 100, status?: string, archived?: boolean): Promise<IdeaListResponse> {
     const response = await this.client.get<IdeaListResponse>('/api/v1/ideas/', {
-      params: { skip, limit, status, archived },
+      params: { skip, limit, status, is_archived: archived },
     });
     return response.data;
   }
@@ -461,12 +461,16 @@ class ApiClient {
   }
 
   async archiveIdea(ideaId: string): Promise<IdeaResponse> {
-    const response = await this.client.post<IdeaResponse>(`/api/v1/ideas/${ideaId}/archive`);
+    const response = await this.client.post<IdeaResponse>(`/api/v1/ideas/${ideaId}/archive`, {
+      is_archived: true
+    });
     return response.data;
   }
 
   async unarchiveIdea(ideaId: string): Promise<IdeaResponse> {
-    const response = await this.client.post<IdeaResponse>(`/api/v1/ideas/${ideaId}/unarchive`);
+    const response = await this.client.post<IdeaResponse>(`/api/v1/ideas/${ideaId}/archive`, {
+      is_archived: false
+    });
     return response.data;
   }
 
@@ -478,7 +482,7 @@ class ApiClient {
   // Projects
   async listProjects(skip = 0, limit = 100, status?: string, backlog?: string, archived?: boolean): Promise<ProjectListResponse> {
     const response = await this.client.get<ProjectListResponse>('/api/v1/projects/', {
-      params: { skip, limit, status, backlog, archived },
+      params: { skip, limit, status, backlog, is_archived: archived },
     });
     return response.data;
   }
@@ -503,12 +507,16 @@ class ApiClient {
   }
 
   async archiveProject(projectId: string): Promise<ProjectResponse> {
-    const response = await this.client.post<ProjectResponse>(`/api/v1/projects/${projectId}/archive`);
+    const response = await this.client.post<ProjectResponse>(`/api/v1/projects/${projectId}/archive`, {
+      is_archived: true
+    });
     return response.data;
   }
 
   async unarchiveProject(projectId: string): Promise<ProjectResponse> {
-    const response = await this.client.post<ProjectResponse>(`/api/v1/projects/${projectId}/unarchive`);
+    const response = await this.client.post<ProjectResponse>(`/api/v1/projects/${projectId}/archive`, {
+      is_archived: false
+    });
     return response.data;
   }
 
