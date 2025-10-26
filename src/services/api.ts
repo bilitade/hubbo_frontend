@@ -599,6 +599,13 @@ class ApiClient {
   }
 
   // Task Attachments
+  async listAllTaskAttachments(skip = 0, limit = 100): Promise<any[]> {
+    const response = await this.client.get('/api/v1/tasks/attachments/all', {
+      params: { skip, limit },
+    });
+    return response.data;
+  }
+
   async uploadTaskAttachment(taskId: string, file: File): Promise<any> {
     const formData = new FormData();
     formData.append('file', file);
