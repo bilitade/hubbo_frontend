@@ -2,7 +2,6 @@ import axios, { AxiosError } from 'axios';
 import type { AxiosInstance } from 'axios';
 import type {
   Token,
-  RefreshRequest,
   UserResponse,
   UserRegister,
   UserCreate,
@@ -13,10 +12,7 @@ import type {
   RoleUpdate,
   PermissionResponse,
   PermissionCreate,
-  PasswordResetRequest,
   PasswordResetResponse,
-  PasswordResetConfirm,
-  PasswordChange,
   PasswordChangeResponse,
   ChatRequest,
   ChatResponse,

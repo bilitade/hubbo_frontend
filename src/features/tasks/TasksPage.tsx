@@ -161,7 +161,8 @@ export function TasksPage() {
                 </tr>
               ) : (
                 tasks.map((task) => {
-                  const project = task.project_id ? projects[task.project_id] : null;
+                  const projectId = task.project_id ?? undefined;
+                  const project = projectId ? projects[projectId] : null;
                   const backlog = project?.backlog || task.backlog;
                   
                   return (
@@ -192,15 +193,15 @@ export function TasksPage() {
                         {project ? (
                           <div className="flex flex-col gap-1">
                             <code className="text-xs bg-muted px-2 py-1 rounded w-fit">
-                              {project.project_number || task.project_id.slice(0, 8) + '...'}
+                              {project.project_number || (projectId ? `${projectId.slice(0, 8)}...` : '')}
                             </code>
                             <span className="text-xs text-muted-foreground line-clamp-1">
                               {project.title}
                             </span>
                           </div>
-                        ) : task.project_id ? (
+                        ) : projectId ? (
                           <code className="text-xs bg-muted px-2 py-1 rounded">
-                            {task.project_id.slice(0, 8)}...
+                            {projectId.slice(0, 8)}...
                           </code>
                         ) : (
                           <span className="text-xs text-muted-foreground">-</span>

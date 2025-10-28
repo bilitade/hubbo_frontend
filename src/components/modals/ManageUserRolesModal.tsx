@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../ui/dialog';
-import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Shield, Save, CheckCircle } from 'lucide-react';
 import type { UserResponse, RoleResponse } from '../../types/api';

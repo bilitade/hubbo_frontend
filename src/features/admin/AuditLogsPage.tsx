@@ -10,8 +10,7 @@ import {
   CheckCircle2,
   XCircle,
   User,
-  Clock,
-  Globe
+  Clock
 } from 'lucide-react';
 import { apiClient } from '../../services/api';
 

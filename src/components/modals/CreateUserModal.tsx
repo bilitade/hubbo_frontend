@@ -3,8 +3,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../ui/dia
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
-import { Alert } from '../ui/alert';
-import { UserPlus, Eye, EyeOff, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { UserPlus, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 import { validatePassword, validateEmail, validateName, getPasswordStrength } from '../../utils/validation';
 
 interface CreateUserModalProps {

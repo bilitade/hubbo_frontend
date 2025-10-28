@@ -14,7 +14,6 @@ import {
   BarChart3,
   Calendar,
   Download,
-  TrendingUp,
   Users,
   Zap,
   DollarSign

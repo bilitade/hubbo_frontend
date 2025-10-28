@@ -8,7 +8,6 @@ import {
   Search,
   Filter,
   CheckCircle2,
-  XCircle,
   Zap,
   DollarSign,
   Clock,

@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '../ui/dia
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
-import { UserCog, Save, Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
+import { UserCog, Save, Eye, EyeOff, XCircle } from 'lucide-react';
 import { validatePassword, validateName, getPasswordStrength } from '../../utils/validation';
 import type { UserResponse } from '../../types/api';
 
