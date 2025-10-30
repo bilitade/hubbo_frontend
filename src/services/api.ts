@@ -537,9 +537,16 @@ class ApiClient {
   }
 
   // Tasks
-  async listTasks(skip = 0, limit = 100, status?: string, project_id?: string, backlog?: string): Promise<TaskListResponse> {
+  async listTasks(
+    skip = 0,
+    limit = 100,
+    status?: string,
+    project_id?: string,
+    backlog?: string,
+    assigned_to?: string,
+  ): Promise<TaskListResponse> {
     const response = await this.client.get<TaskListResponse>('/api/v1/tasks/', {
-      params: { skip, limit, status, project_id, backlog },
+      params: { skip, limit, status, project_id, backlog, assigned_to },
     });
     return response.data;
   }

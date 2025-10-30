@@ -39,6 +39,7 @@ interface TaskDetailModalProps {
 export function TaskDetailModal({ taskId, open, onOpenChange, onSuccess }: TaskDetailModalProps) {
   const [task, setTask] = useState<TaskDetailResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [comment, setComment] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
   const [users, setUsers] = useState<UserResponse[]>([]);
@@ -70,6 +71,7 @@ export function TaskDetailModal({ taskId, open, onOpenChange, onSuccess }: TaskD
     if (!taskId) return;
 
     setLoading(true);
+    setLoadError(null);
     try {
       const data = await apiClient.getTask(taskId);
       setTask(data);
@@ -79,6 +81,7 @@ export function TaskDetailModal({ taskId, open, onOpenChange, onSuccess }: TaskD
       setEditedDescription(data.description || '');
     } catch (error) {
       console.error('Failed to load task:', error);
+      setLoadError('We could not load the task details. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -385,19 +388,39 @@ export function TaskDetailModal({ taskId, open, onOpenChange, onSuccess }: TaskD
     return '📎';
   };
 
-  if (!task && loading) {
+  if (!task) {
     return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog
+        open={open}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            handleClose();
+          } else {
+            onOpenChange(isOpen);
+          }
+        }}
+      >
         <DialogContent className="max-w-3xl">
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <div className="flex flex-col items-center justify-center py-12 gap-4">
+            {loading ? (
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground text-center">
+                  {loadError ?? 'Select a task to view its full details.'}
+                </p>
+                {loadError && (
+                  <Button variant="outline" size="sm" onClick={loadTaskDetails}>
+                    Retry
+                  </Button>
+                )}
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>
     );
   }
-
-  if (!task) return null;
 
   if (showDeleteConfirm) {
     return (

@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, User } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Edit, Trash2, User } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { apiClient } from '../../services/api';
-import type { TaskResponse, ProjectResponse } from '../../types/api';
+import type { TaskResponse, ProjectResponse, UserResponse } from '../../types/api';
+import { useAuth } from '../../contexts/AuthContext';
+import { TaskDetailModal } from '../../components/modals/TaskDetailModal';
 
 export function TasksPage() {
   const [tasks, setTasks] = useState<TaskResponse[]>([]);
@@ -11,10 +13,98 @@ export function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [filterBacklog, setFilterBacklog] = useState<string>('');
+  const [assignedToFilter, setAssignedToFilter] = useState<string>('me');
+  const [projectFilter, setProjectFilter] = useState<string>('');
+  const [users, setUsers] = useState<UserResponse[]>([]);
+  const [projectOptions, setProjectOptions] = useState<ProjectResponse[]>([]);
+  const { user, loading: authLoading } = useAuth();
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  const getUserDisplayName = (userData: UserResponse) => {
+    if (!userData) return 'Unknown User';
+    return (
+      userData.preferred_name ||
+      userData.full_name ||
+      [userData.first_name, userData.last_name].filter(Boolean).join(' ') ||
+      userData.email
+    );
+  };
+
+  const statusOptions: { value: string; label: string }[] = [
+    { value: '', label: 'All Statuses' },
+    { value: 'unassigned', label: 'Unassigned' },
+    { value: 'in_progress', label: 'In Progress' },
+    { value: 'done', label: 'Completed' },
+    { value: 'overdue', label: 'Overdue' },
+  ];
+
+  const backlogOptions: { value: string; label: string }[] = [
+    { value: '', label: 'All Backlogs' },
+    { value: 'business_innovation', label: 'Business Innovation' },
+    { value: 'engineering', label: 'Engineering' },
+    { value: 'output_adoption', label: 'Outcomes & Adoption' },
+  ];
+
+  const userOptions = useMemo(() => {
+    const combined = user ? [user, ...users] : [...users];
+    return combined
+      .filter((option, index, self) => self.findIndex((item) => item.id === option.id) === index)
+      .sort((a, b) => getUserDisplayName(a).localeCompare(getUserDisplayName(b), undefined, { sensitivity: 'base' }));
+  }, [user, users]);
 
   useEffect(() => {
+    const fetchFilterData = async () => {
+      try {
+        const [usersData, projectsResponse] = await Promise.all([
+          apiClient.listUsers(0, 100),
+          apiClient.listProjects(0, 100, undefined, undefined, false),
+        ]);
+
+        setUsers(usersData ?? []);
+        setProjectOptions((projectsResponse?.projects ?? []).filter((project) => !project.is_archived));
+      } catch (error) {
+        console.error('Failed to load filter data:', error);
+      }
+    };
+
+    fetchFilterData();
+  }, []);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user?.id && assignedToFilter === 'me') {
+      setAssignedToFilter('all');
+    }
+    if (user?.id && assignedToFilter === 'all') {
+      // No automatic change when user is available and filter was explicitly cleared.
+      return;
+    }
+  }, [authLoading, user?.id, assignedToFilter]);
+
+  useEffect(() => {
+    if (authLoading) return;
     loadTasks();
-  }, [filterStatus, filterBacklog]);
+  }, [authLoading, filterStatus, filterBacklog, assignedToFilter, projectFilter]);
+
+  const handleResetFilters = () => {
+    setFilterStatus('');
+    setFilterBacklog('');
+    setProjectFilter('');
+    setAssignedToFilter( 'all');
+  };
+
+  const handleOpenTaskDetails = (taskId: string) => {
+    setSelectedTaskId(taskId);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleDetailModalChange = (open: boolean) => {
+    setIsDetailModalOpen(open);
+    if (!open) {
+      setSelectedTaskId(null);
+    }
+  };
 
   const loadTasks = async () => {
     try {
@@ -25,11 +115,28 @@ export function TasksPage() {
         0, 
         100, 
         filterStatus || undefined,
-        undefined, // project_id filter
-        filterBacklog || undefined // backlog filter
+        projectFilter || undefined,
+        filterBacklog || undefined,
+        assignedToFilter && assignedToFilter !== 'all' && assignedToFilter !== 'me'
+          ? assignedToFilter
+          : assignedToFilter === 'me' && user?.id
+            ? user.id
+            : undefined
       );
       
-      setTasks(response.tasks);
+      const filteredTasks = response.tasks;
+
+      // Apply backlog filter if specified
+      const filteredTasksWithBacklog = filterBacklog
+        ? filteredTasks.filter(task => {
+            const taskBacklog = task.project_id 
+              ? projects[task.project_id]?.backlog 
+              : task.backlog;
+            return taskBacklog === filterBacklog;
+          })
+        : filteredTasks;
+
+      setTasks(filteredTasksWithBacklog);
       
       // Fetch project details for tasks that have project_id
       const uniqueProjectIds = [...new Set(
@@ -93,6 +200,34 @@ export function TasksPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header with Stats */}
+      <div className="grid grid-cols-4 gap-4">
+        <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+          <p className="text-xs text-muted-foreground mb-1">Unassigned</p>
+          <p className="text-2xl font-bold text-gray-600">
+            {tasks.filter(t => t.status === 'unassigned').length}
+          </p>
+        </div>
+        <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <p className="text-xs text-muted-foreground mb-1">In Progress</p>
+          <p className="text-2xl font-bold text-blue-600">
+            {tasks.filter(t => t.status === 'in_progress').length}
+          </p>
+        </div>
+        <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
+          <p className="text-xs text-muted-foreground mb-1">Done</p>
+          <p className="text-2xl font-bold text-green-600">
+            {tasks.filter(t => t.status === 'done').length}
+          </p>
+        </div>
+        <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+          <p className="text-xs text-muted-foreground mb-1">Total Tasks</p>
+          <p className="text-2xl font-bold text-gray-600">
+            {tasks.length}
+          </p>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -101,40 +236,78 @@ export function TasksPage() {
             Manage and track all tasks across projects
           </p>
         </div>
-        <Button onClick={() => alert('Use Project modal to generate tasks')}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Task
-        </Button>
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4">
-        <div className="flex-1">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Status</label>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
-            <option value="">All Statuses</option>
-            <option value="in_progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="blocked">Blocked</option>
-            <option value="cancelled">Cancelled</option>
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
-        <div className="flex-1">
+
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Backlog</label>
           <select
             value={filterBacklog}
             onChange={(e) => setFilterBacklog(e.target.value)}
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
-            <option value="">All Backlogs</option>
-            <option value="business_innovation">Business & Innovation</option>
-            <option value="engineering">Engineering</option>
-            <option value="output_adoption">Outcomes & Adoption</option>
+            {backlogOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Assigned To</label>
+          <select
+            value={assignedToFilter}
+            onChange={(e) => setAssignedToFilter(e.target.value)}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            disabled={authLoading && assignedToFilter === 'me'}
+          >
+            <option value="me">{user ? `${getUserDisplayName(user)} (Me)` : 'My Tasks'}</option>
+            <option value="all">All Users</option>
+            {userOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {getUserDisplayName(option)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Project</label>
+          <select
+            value={projectFilter}
+            onChange={(e) => setProjectFilter(e.target.value)}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">All Projects</option>
+            {projectOptions.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.project_number || project.title}
+              </option>
+            ))}
           </select>
         </div>
       </div>
+
+      <Button variant="ghost" onClick={() => handleResetFilters()} className="text-xs">
+        Reset Filters
+      </Button>
 
       {/* Tasks Table */}
       <div className="border rounded-lg overflow-hidden">
@@ -251,7 +424,7 @@ export function TasksPage() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => alert('Edit task: ' + task.id)}
+                            onClick={() => handleOpenTaskDetails(task.id)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -274,35 +447,14 @@ export function TasksPage() {
         </div>
       </div>
 
-      {/* Task Summary */}
-      {tasks.length > 0 && (
-        <div className="grid grid-cols-4 gap-4">
-          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
-            <p className="text-xs text-muted-foreground mb-1">Unassigned</p>
-            <p className="text-2xl font-bold text-gray-600">
-              {tasks.filter(t => t.status === 'unassigned').length}
-            </p>
-          </div>
-          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-            <p className="text-xs text-muted-foreground mb-1">In Progress</p>
-            <p className="text-2xl font-bold text-blue-600">
-              {tasks.filter(t => t.status === 'in_progress').length}
-            </p>
-          </div>
-          <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
-            <p className="text-xs text-muted-foreground mb-1">Done</p>
-            <p className="text-2xl font-bold text-green-600">
-              {tasks.filter(t => t.status === 'done').length}
-            </p>
-          </div>
-          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
-            <p className="text-xs text-muted-foreground mb-1">Total Tasks</p>
-            <p className="text-2xl font-bold text-gray-600">
-              {tasks.length}
-            </p>
-          </div>
-        </div>
-      )}
+      <TaskDetailModal
+        taskId={selectedTaskId}
+        open={isDetailModalOpen}
+        onOpenChange={handleDetailModalChange}
+        onSuccess={() => {
+          loadTasks();
+        }}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   DndContext, 
   DragOverlay, 
@@ -13,9 +13,11 @@ import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 import { Badge } from '../../components/ui/badge';
 import { Lightbulb, FolderKanban, CheckCircle2, User, GripVertical, Sparkles, TrendingUp, Zap } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../../services/api';
 import type { IdeaResponse, ProjectResponse } from '../../types/api';
 import { AddIdeaModal, EditProjectModal, AddTaskModal } from '../../components/modals';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface DroppableColumnProps {
   id: string;
@@ -168,6 +170,8 @@ function DraggableProjectCard({ project, onClick }: DraggableProjectCardProps) {
 }
 
 export function DashboardPage() {
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [ideas, setIdeas] = useState<IdeaResponse[]>([]);
   const [projects, setProjects] = useState<ProjectResponse[]>([]);
@@ -185,6 +189,7 @@ export function DashboardPage() {
       desired_outcomes?: string;
     };
   } | null>(null);
+  const [myAssignedTaskCount, setMyAssignedTaskCount] = useState(0);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -194,11 +199,7 @@ export function DashboardPage() {
     })
   );
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [ideasData, projectsData] = await Promise.all([
@@ -207,12 +208,30 @@ export function DashboardPage() {
       ]);
       setIdeas(ideasData.ideas || []);
       setProjects(projectsData.projects || []);
+
+      if (user?.id) {
+        try {
+          const myTasksResponse = await apiClient.listTasks(0, 1, undefined, undefined, undefined, user.id);
+          setMyAssignedTaskCount(myTasksResponse.total || 0);
+        } catch (taskCountError) {
+          console.error('Failed to load assigned task count:', taskCountError);
+          setMyAssignedTaskCount(0);
+        }
+      } else {
+        setMyAssignedTaskCount(0);
+      }
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!authLoading) {
+      loadData();
+    }
+  }, [authLoading, loadData]);
 
   const isIdea = (item: IdeaResponse | ProjectResponse): item is IdeaResponse => {
     return 'category' in item;
@@ -377,7 +396,7 @@ export function DashboardPage() {
           </div>
           
           {/* Stats Cards */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
             <div className="bg-primary/10 border border-primary/20 rounded-lg px-4 py-2 hover:scale-105 transition-transform">
               <div className="font-bold text-lg sm:text-xl text-primary">{ideas.filter(i => !i.is_archived).length}</div>
               <div className="text-muted-foreground text-[10px] sm:text-xs font-medium">Ideas</div>
@@ -390,6 +409,16 @@ export function DashboardPage() {
               <div className="font-bold text-lg sm:text-xl text-accent">{projects.filter(p => !p.is_archived && p.status === 'done').length}</div>
               <div className="text-muted-foreground text-[10px] sm:text-xs font-medium">Done</div>
             </div>
+            {user?.id && (
+              <button
+                type="button"
+                onClick={() => navigate('/dashboard/tasks')}
+                className="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-lg px-4 py-2 hover:scale-105 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+              >
+                <div className="font-bold text-lg sm:text-xl text-emerald-600 dark:text-emerald-300">{myAssignedTaskCount}</div>
+                <div className="text-muted-foreground text-[10px] sm:text-xs font-medium">Assigned to Me</div>
+              </button>
+            )}
           </div>
         </div>
       </div>
